@@ -1,0 +1,33 @@
+{
+    "type": "module",
+    "sideEffects": false,
+    "name": "@lexriver/dome",
+    "version": "1.0.1",
+    "description": "",
+    "main": "out/index.js",
+    "types": "out/index.d.ts",
+    "scripts": {
+        "build": "tsc"
+    },
+    "keywords": [
+        "typescript",
+        "virtual DOM",
+        "jsx",
+        "react",
+        "DOM"
+    ],
+    "author": "LexRiver <LexRiver@gmail.com> (https://github.com/LexRiver/)",
+    "license": "MIT",
+    "devDependencies": {
+        "@types/node": "^12.12.42",
+        "typescript": "^3.6.3"
+    },
+    "dependencies": {
+        "@lexriver/async": "^1.0.0",
+        "@lexriver/data-types": "^2.0.0",
+        "@lexriver/observable": "^1.0.0",
+        "lodash.clonedeep": "^4.5.0",
+        "svg-tag-names": "^2.0.0",
+        "ts-debounce": "^2.0.1"
+    }
+}
