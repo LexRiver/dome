@@ -39,7 +39,7 @@ const MyComponent = (attrs, children) => <div>counter={attrs.counter}</div>
 ## Mount component to DOM
 
 ```typescript
-document.body.appendChild(<MyComponent counter={100}>)
+document.body.appendChild(<MyComponent counter={100} />)
 ```
 
 ## Example of component with dynamic content load
@@ -55,7 +55,7 @@ export class MyComponent extends DomeComponent<Attrs>{
         return <div ref={ref => this.refContainer = ref}>loading...</div>
     }
     async afterRender(){
-        this.scheduleUpdate()
+        this.scheduleUpdate() // update component right after the first render
     }
 
     async updateAsync(){
@@ -65,7 +65,7 @@ export class MyComponent extends DomeComponent<Attrs>{
 }
 ```
 
-for not to save reference to main div `rootElement` can be used
+Special property `this.rootElement` can be used for reference to main element.
 
 ```tsx
 export class MyComponent extends DomeComponent<Attrs>{
@@ -84,7 +84,7 @@ export class MyComponent extends DomeComponent<Attrs>{
 }
 ```
 
-Attributes (properties) for component are not read only, so we can change them, but `this.scheduleUpdate()` should be called.
+Attributes (properties) for component are not read only, so we can change them, but `this.scheduleUpdate()` should be called to re-render the component.
 Keep in mind that if parent component will be re-rendered then child component will be re-rendered also with attributes used in parent component.
 
 ```tsx
@@ -93,7 +93,6 @@ interface Attrs{
 }
 
 export class MyComponent extends DomeComponent<Attrs>{
-    protected refContainer!:HTMLDivElement // for reference to main div of component
     render(){
         if(!this.attrs.text){
             return <div>loading...</div>
@@ -102,17 +101,19 @@ export class MyComponent extends DomeComponent<Attrs>{
     }
     async afterRender(){
         this.attrs.text = await fetch(...)
-        this.scheduleUpdate() // scheduleUpdate executes updateAsync() method if defined else render()
+        this.scheduleUpdate() // scheduleUpdate executes `updateAsync()` method if it is defined else `render()` method
     }
 }
 ```
 
+<br/>
+
 There is no such thing as State of component.
-It's recommended to use Observable attributes or the whole global state for application as a colleciton of observable variables.
+It's recommended to use `Observable` attributes or the global state for application as a colleciton of observable variables.
 
 ## Example of Observable attributes
 
-Every time the observable attribute changes the updateAsync() or render() method will be executed
+Every time the observable attribute changes then the `updateAsync()` or `render()` method will be executed.
 
 ```tsx
 interface Attrs{
@@ -120,7 +121,6 @@ interface Attrs{
 }
 
 export class MyComponent extends DomeComponent<Attrs>{
-    protected refContainer!:HTMLDivElement // for reference to main div of component
     render(){
         return <div>text={this.attrs.textO.get()}</div>
     }
@@ -129,7 +129,7 @@ export class MyComponent extends DomeComponent<Attrs>{
     }
 }
 
-let myObservableStringO = new ObservableValue<string>('default value')
+let myObservableStringO = new ObservableVariable<string>('default value')
 setTimeout(() => {
     myObservableStrginO.set('another value')
 }, 3000)
@@ -140,11 +140,13 @@ document.body.appendChild(<MyComponent textO={myObservableStringO} />)
 For more details on `Observable` please visit: https://github.com/LexRiver/observable
 
 
+<br/>
+
 ## Example of auto-unsubscribe component from some update events on component unmount from DOM
 
 ```tsx
 export module GlobalState{
-    export const someStringO = new ObservableValue<string>('default text')
+    export const someStringO = new ObservableVariable<string>('default text')
     export const someEvent = new TypeEvent<(counter:number)=>void>()
 }
 
@@ -188,18 +190,22 @@ setTimeout(() => {
 
 ```
 
+<br/>
+<br/>
+
 There are also features for animation, dynamically change css classes and router, please keep reading.
 
 # Setup your environment
 
 ```
-npm install --save-dev @babel/cli @babel/core @babel/preset-env @types/node awesome-typescript-loader babel-loader copy-webpack-plugin css-loader express file-loader html-webpack-plugin image-webpack-loader mini-css-extract-plugin node-sass rimraf sass sass-loader serve-handler style-loader terser-webpack-plugin tslib tslint
-typescript webpack webpack-cli webpack-dev-middleware webpack-dev-server
+npm install --save-dev @babel/cli @babel/core @babel/preset-env @types/node awesome-typescript-loader babel-loader copy-webpack-plugin css-loader express file-loader html-webpack-plugin image-webpack-loader mini-css-extract-plugin node-sass rimraf sass sass-loader serve-handler style-loader terser-webpack-plugin tslib tslint typescript webpack webpack-cli webpack-dev-middleware webpack-dev-server
 ```
 
 ```
 npm install @lexriver/dome regenerator-runtime
 ```
+
+<br/>
 
 add file `webpack.config.common.js` to your root
 ```javascript
@@ -284,7 +290,7 @@ module.exports = {
 }
 
 ```
-
+<br/>
 add file `webpack.config.dev.js` to your root
 
 ```javascript
@@ -390,6 +396,7 @@ module.exports = {
     ],
 }
 ```
+<br/>
 
 add file `webpack.config.prod.js` to your root
 
@@ -505,8 +512,11 @@ module.exports = {
 
 ```
 
+<br/>
+
 Your `tsconfig.json` should be like this:
-```json
+
+```javascript
     "compilerOptions": {
       /* Basic Options */
       "target": "esnext",
@@ -567,6 +577,8 @@ Your `tsconfig.json` should be like this:
   }
 ```
 
+<br/>
+
 add `babel.config.js` to your root:
 ```javascript
 // use babel.config.js to apply to imported packages also
@@ -590,6 +602,8 @@ module.exports = {
 } 
 ```
 
+<br/>
+
 add `typings.d.ts` to your root:
 ```javascript
 declare module "*.module.css";
@@ -598,6 +612,8 @@ declare module "*.m.scss";
 declare module "*.png"
 declare module "*.jpg"
 ```
+
+<br/>
 
 
 create file `./src/website/App.tsx`
@@ -613,12 +629,15 @@ const App = () => (
 document.body.appendChild(<App />)
 ```
 
+<br/>
+
 cerate file `./src/website/App.m.scss`
 ```css
 .app {
     border: solid 1px green;
 }
 ```
+<br/>
 
 add these scripts to your package.json:
 ```json
@@ -631,6 +650,8 @@ add these scripts to your package.json:
     }
 
 ```
+
+<br/>
 
 So when you run
 ```
@@ -656,7 +677,7 @@ the production website will be generated in ./webpack-out
 Create a custom component
 
 ```tsx
-interface Attrs{ // to add custom attributes to component
+interface Attrs{ // to add custom attributes to your component
     id?:number
 }
 
@@ -672,7 +693,7 @@ Then use it like this
     <MyComponent id={100}>Text inside</MyComponent>
 ```
 
-There are also internal attributes:
+There are also internal attributes for any component:
 *    `ref?:(ref)=>void` - to take a reference to this component
 *    `onShowAnimation?:Animation` - animation for show element
 *    `onHideAnimation?:Animation` - animation for hide element
@@ -682,7 +703,7 @@ And `Animation` type is
 ```typescript
 export interface Animation{
     cssClassName:string
-    timeMs:number
+    timeMs:number // time in milliseconds before removing cssClassName from element
 }
 ```
 
@@ -695,13 +716,13 @@ Use these attributes like so:
 
 ## Style html elements
 
-Inline styles
+Inline styles:
 
 ```tsx
 <div style={{backgroundColor:'green', border: 'solid 1px red'}}></div>
 ```
 
-Css classes could be set by using `class` attribute or aliases `className` and `cssClasses`
+Css classes could be set by using `class` attribute or by aliases `className` and `cssClasses`
 
 ```tsx
 <div class='class1 class2'></div>
@@ -716,11 +737,13 @@ Instead of string [`CssClass`](###cssClass-type) type can be used, for example:
 ```
 
 Please see `DomeManipulator.setCssClasses(..)` for more details.
+
 <br/>
 
 ## Events for html elements
 
 To create an event use standart event names but in camel case:
+
 ```tsx
 <button onClick={(e) => {e.preventDefault(); console.log('click')}}>click me</button>
 ```
@@ -736,11 +759,11 @@ To set inner html for element:
 
 <br/>
 
-## Properties for custom component
+## Properties for DomeComponent
 
 ## `rootElement:Element|HTMLElement`
 
-This is a reference to root element like `<div></div>`.
+This is a reference to root element like `<div></div>` that was used in first render.
 Do not use it with fragment `<></>` as a root element.
 
 ## `attrs`
@@ -757,7 +780,7 @@ Contains all children inside component
 
 ## init()
 
-This method can be overwritten. It will be executed before first render.
+This method is for overwrite. It will be executed before first render.
 
 ```tsx
 interface Attrs{ // to add custom attributes to component
@@ -779,8 +802,10 @@ export class MyComponent extends DomeComponent<Attrs>{
 
 ## render()
 
-This method must be overwritten. It will be executed when component first rendered and also when updated if `updateAsync()` is no overwritten.
+This method must be overwritten. It will be executed when component first rendered and also when updated if `updateAsync()` was not overwritten.
+
 This method must return DOM element or elements.
+
 To return a few elements fragment syntax `<></>` can be used.
 
 ```tsx
@@ -814,7 +839,7 @@ export class MyComponent extends DomeComponent<Attrs>{
         return <div>id={this.attrs.id}</div>
     }
     afterRender(){
-        console.log('after render') // here remote server fetch can be used to update component
+        console.log('after render') 
     }
 }
 
@@ -826,7 +851,7 @@ export class MyComponent extends DomeComponent<Attrs>{
 
 This method can be overwritten. By default this method will call `render()` method to update the component. And after that `afterUpdate()` will be executed.
 
-To force component to update the method `scheduleUpdate()` should be used.
+Use method `scheduleupdate()` to force component to re-render.
 
 ```tsx
 interface Attrs{
@@ -864,22 +889,36 @@ It should be used inside component:
     this.scheduleUpdate()
 ```
 
+<br/>
+
 ## afterUpdate()
 
 This method will be executed after component update, but not after first render.
 Overwrite this method to take effect.
 
+
+
+
+
+
+
+<br/>
+<br/>
+<br/>
+
 # Animation
 
-To add an animation for render or update component attributes `onShowAnimation` and `onHideAnimation` (`Animation` type) can be used.
+To add an animation for render or update component use attributes `onShowAnimation` and `onHideAnimation`.
+
+These attributes uses an `Animation` type:
 
 ```typescript
 export interface Animation{
-    cssClassName:string // the name of css className to be applied to DOM element
-    timeMs:number // after that number of milliseconds the css class will be removed from DOM element
+    cssClassName:string // the name of css class to be applied to DOM element
+    timeMs:number // amount of milliseconds to wait before removing cssClassName from element
 }
 ```
-
+<br/>
 
 ```css
 /* style.m.scss */
@@ -902,6 +941,9 @@ export interface Animation{
     animation: zoomIn 400ms linear forwards;
 }
 ```
+<br/>
+
+And use it in `.tsx` file
 
 ```tsx
 import css from './style.m.scss'
@@ -910,7 +952,17 @@ import css from './style.m.scss'
 ```
 
 
-To add animation to list of items please see below.
+To apply animation for list of items please see below.
+
+
+
+
+
+
+
+
+
+
 
 <br/>
 <br/>
@@ -920,7 +972,7 @@ To add animation to list of items please see below.
 
 DomeManipulator is a module for manipulating DOM.
 
-## `DomeManipulator.hideElementAsync(element: Element, animation?:Animation)`
+### `DomeManipulator.hideElementAsync(element: Element, animation?:Animation)`
 
 Use this method to temporarily hide the element
 
@@ -931,75 +983,75 @@ await DomeManipulator.hideElementAsync(myRef, myAnimation)
 <br/>
 
 
-## `DomeManipulator.unhideElementAsync(element: Element, animation?:Animation)`
+### `DomeManipulator.unhideElementAsync(element: Element, animation?:Animation)`
 
 Use this method to unhide element that was hidden by `.hideElementAsync(..)`
 
 <br/>
 
 
-## `DomeManipulator.insertAsFirstChildAsync(elementToInsert: Element, parentElement: Element | DocumentFragment, animation?:Animation)`
+### `DomeManipulator.insertAsFirstChildAsync(elementToInsert: Element, parentElement: Element | DocumentFragment, animation?:Animation)`
 
 Insert element as a first child for container.
 
 <br/>
 
-## `DomeManipulator.insertBeforeAsync(elementToInsert: Element, refElement: Element | null, parentElement: Element | DocumentFragment, animation?:Animation)`
+### `DomeManipulator.insertBeforeAsync(elementToInsert: Element, refElement: Element | null, parentElement: Element | DocumentFragment, animation?:Animation)`
 
 Insert element before another element.
 
 <br/>
 
-## `DomeManipulator.insertAfterAsync(elementToInsert: Element, refElement: Element | null | undefined, parentElement: Element | DocumentFragment, animation?:Animation)`
+### `DomeManipulator.insertAfterAsync(elementToInsert: Element, refElement: Element | null | undefined, parentElement: Element | DocumentFragment, animation?:Animation)`
 
 Insert element after another element.
 
 <br/>
 
-## `DomeManipulator.insertByIndexAsync(elementToInsert: Element, index: number, parentElement: Element | DocumentFragment, animation?:Animation)`
+### `DomeManipulator.insertByIndexAsync(elementToInsert: Element, index: number, parentElement: Element | DocumentFragment, animation?:Animation)`
 
 Insert element after element with exact index in parent.
 
 <br/>
 
 
-## `DomeManipulator.replaceAsync(oldElement: Element, newElement: Element, animationHide?:Animation, animationShow?:Animation)`
+### `DomeManipulator.replaceAsync(oldElement: Element, newElement: Element, animationHide?:Animation, animationShow?:Animation)`
 
 Replace one element with another element.
 
 <br/>
 
-## `DomeManipulator.removeElementAsync(element: Element, animation?:Animation)`
+### `DomeManipulator.removeElementAsync(element: Element, animation?:Animation)`
 
 Remove element from DOM.
 
 <br/>
 
-## `DomeManipulator.forEachChildrenOf(element:Element, action:(child:ChildNode)=>void)`
+### `DomeManipulator.forEachChildrenOf(element:Element, action:(child:ChildNode)=>void)`
 
 Do some action for each child nodes of element.
 
 <br/>
 
-## `DomeManipulator.removeAllChildrenAsync(element: Element, animation?:Animation)`
+### `DomeManipulator.removeAllChildrenAsync(element: Element, animation?:Animation)`
 
 Remove all children for element.
 
 <br/>
 
-## `DomeManipulator.appendChildAsync(containerElement:Element, child:Element, animation?:Animation)`
+### `DomeManipulator.appendChildAsync(containerElement:Element, child:Element, animation?:Animation)`
 
 Append child to container element.
 
 <br/>
 
-## `DomeManipulator.appendChildrenAsync(containerElement:Element, children:Element | Element[] | DocumentFragment | Text | string | null | undefined, animation?:Animation)`
+### `DomeManipulator.appendChildrenAsync(containerElement:Element, children:Element | Element[] | DocumentFragment | Text | string | null | undefined, animation?:Animation)`
 
 Append one or few children to container element.
 
 <br/>
 
-## `DomeManipulator.replaceAllChildrenAsync(...)`
+### `DomeManipulator.replaceAllChildrenAsync(...)`
 
 ```typescript
     replaceAllChildrenAsync(
@@ -1014,42 +1066,42 @@ Replace all children for container element.
 
 <br/>
 
-## `DomeManipulator.isInDom(el: Element | undefined)`
+### `DomeManipulator.isInDom(el: Element | undefined)`
 
 Check if element is in DOM. Uses `document.body.contains(el)` internally, so it could be not so fast.
 
 <br/>
 
-## `DomeManipulator.addCssClassAsync(element: Element, cssClassName: string, removeAfterMs?:number)`
+### `DomeManipulator.addCssClassAsync(element: Element, cssClassName: string, removeAfterMs?:number)`
 
 Add css class to element and remove it after `removeAfterMs` milliseconds if provided.
 
 <br/>
 
-## `DomeManipulator.addCssClassesAsync(element: Element, cssClassNames: string[], removeAfterMs?:number)`
+### `DomeManipulator.addCssClassesAsync(element: Element, cssClassNames: string[], removeAfterMs?:number)`
 
 Add few css classes to element and remove them after `removeAfterMs` milliseconds if provided.
 
 <br/>
 
-## `DomeManipulator.removeCssClass(element: Element, cssClassName: string)`
+### `DomeManipulator.removeCssClass(element: Element, cssClassName: string)`
 
 Remove css class from element.
 
 <br/>
 
-## `DomeManipulator.removeCssClasses(element: Element, cssClassNames: string[])`
+### `DomeManipulator.removeCssClasses(element: Element, cssClassNames: string[])`
 
 Remove few css classes from element.
 
 <br/> 
 
 
-## `DomeManipulator.setCssClasses(element: Element, value: CssClass)`
+### `DomeManipulator.setCssClasses(element: Element, value: CssClass)`
 
 Replace css classes for element.
 
-### CssClass type
+#### CssClass type
 
 ```typescript
 export type CssClass = {[key:string]:boolean|ObservableVariable<boolean>} | string[] | string
@@ -1088,7 +1140,7 @@ DomeManipulator.setCssClasses(myDiv, 'class1 class2')
 
 <br/>
 
-## `DomeManipulator.setAttribute(element: Element, name: string, value: any)`
+### `DomeManipulator.setAttribute(element: Element, name: string, value: any)`
 
 Change attribute for html element
 
@@ -1098,7 +1150,7 @@ DomeManipulator.setAttribute(myDiv, 'data-id', 100)
 
 <br/>
 
-## `DomeManipulator.hasFocus(el: Element):boolean`
+### `DomeManipulator.hasFocus(el: Element):boolean`
 
 Check if element has focus
 
@@ -1108,7 +1160,7 @@ DomeManipulator.hasFocus(myDiv) // boolean
 
 <br/>
 
-## `DomeManipulator.scrollIntoView(element: Element, paddingFromTop:number = 100)`
+### `DomeManipulator.scrollIntoView(element: Element, paddingFromTop:number = 100)`
 
 Smooth scroll element into view with some padding from top of the screen
 
@@ -1118,7 +1170,7 @@ DomeManipulator.scrollIntoView(myDiv)
 
 <br/>
 
-## `DomeManipulator.scrollToTop()`
+### `DomeManipulator.scrollToTop()`
 
 Smooth scroll to top
 
@@ -1153,7 +1205,7 @@ Here is example of `Link` component:
 ```tsx
 interface Attrs{
     url:string|Promise<string>
-    class?:string|{[key:string]:boolean}|{[key:string]:ObservableValue<boolean>}
+    class?:string|{[key:string]:boolean}|{[key:string]:ObservableVariable<boolean>}
     style?:{[key:string]:string|number}
     newTab?:boolean
 }
@@ -1425,8 +1477,8 @@ interface Attrs{
 
 export class Pages extends DomeComponent<Attrs>{
     refList?:HTMLDivElement
-    pagesO = new ObservableValue<JsonPage[]>([])
-    isLoadingO = new ObservableValue<boolean>(true)
+    pagesO = new ObservableVariable<JsonPage[]>([])
+    isLoadingO = new ObservableVariable<boolean>(true)
 
     render(){
         return <div ref={ref => this.refList = ref}>
