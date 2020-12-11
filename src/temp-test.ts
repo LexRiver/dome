@@ -19,3 +19,5 @@ console.log('countOfOperations=', countOfOperations)
 //expect(oldArray).toEqual(newArray)
 // console.log('result oldArray=', oldArray)
 // console.log('result nweArray=', newArray)
+
+

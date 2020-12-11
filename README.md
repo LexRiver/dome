@@ -13,6 +13,23 @@ npm install @lexriver/dome
 
 ```tsx
 import { React, DomeComponent, DomeRouter, DomeManipulator, AnimatedText, AnimatedTable, AnimatedArray} from '@lexriver/dome'
+
+// optional: import observable data type
+import { ObservableVariable, ObservableArray, ObservableMap, ObservableLocalStorageVariable, createObservable, checkIfObservable } from '@lexriver/dome' 
+// more details: https://www.npmjs.com/package/@lexriver/observable
+
+// optional: import TypeEvent
+import { TypeEvent } from '@lexriver/dome' 
+// more details: https://www.npmjs.com/package/@lexriver/type-event
+
+// optional: import data types checker
+import {DataTypes} from '@lexriver/dome'
+// more details: https://www.npmjs.com/package/@lexriver/data-types
+
+// optional: import Async methods
+import {Async} from '@lexriver/dome'
+// more details: https://www.npmjs.com/package/@lexriver/async
+
 ```
 
 ## Creating component
@@ -972,86 +989,137 @@ To apply animation for list of items please see below.
 
 DomeManipulator is a module for manipulating DOM.
 
-### `DomeManipulator.hideElementAsync(element: Element, animation?:Animation)`
+## hideElementAsync
+
+```typescript
+DomeManipulator.hideElementAsync(element: Element, animation?:Animation)
+```
 
 Use this method to temporarily hide the element
 
-```tsx
-await DomeManipulator.hideElementAsync(myRef, myAnimation)
+```typescript
+await DomeManipulator.hideElementAsync(myRef, myAnimationHide)
+```
+
+<br/>
+
+## unhideElementAsync
+
+```typescript
+DomeManipulator.unhideElementAsync(element: Element, animation?:Animation)
+```
+
+Use this method to unhide element that was hidden by `.hideElementAsync(..)`
+
+```typescript
+await DomeManipulator.unhideElementAsync(myRef, myAnimationShow)
 ```
 
 <br/>
 
 
-### `DomeManipulator.unhideElementAsync(element: Element, animation?:Animation)`
+## insertAsFirstChildAsync
 
-Use this method to unhide element that was hidden by `.hideElementAsync(..)`
-
-<br/>
-
-
-### `DomeManipulator.insertAsFirstChildAsync(elementToInsert: Element, parentElement: Element | DocumentFragment, animation?:Animation)`
+```typescript
+DomeManipulator.insertAsFirstChildAsync(elementToInsert: Element, parentElement: Element | DocumentFragment, animation?:Animation)
+```
 
 Insert element as a first child for container.
 
 <br/>
 
-### `DomeManipulator.insertBeforeAsync(elementToInsert: Element, refElement: Element | null, parentElement: Element | DocumentFragment, animation?:Animation)`
+## insertBeforeAsync
+
+```typescript
+DomeManipulator.insertBeforeAsync(elementToInsert: Element, refElement: Element | null, parentElement: Element | DocumentFragment, animation?:Animation)
+```
 
 Insert element before another element.
 
 <br/>
 
-### `DomeManipulator.insertAfterAsync(elementToInsert: Element, refElement: Element | null | undefined, parentElement: Element | DocumentFragment, animation?:Animation)`
+
+## insertAfterAsync
+
+```typescript
+DomeManipulator.insertAfterAsync(elementToInsert: Element, refElement: Element | null | undefined, parentElement: Element | DocumentFragment, animation?:Animation)
+```
 
 Insert element after another element.
 
 <br/>
 
-### `DomeManipulator.insertByIndexAsync(elementToInsert: Element, index: number, parentElement: Element | DocumentFragment, animation?:Animation)`
+## insertByIndexAsync
+
+```typescript
+DomeManipulator.insertByIndexAsync(elementToInsert: Element, index: number, parentElement: Element | DocumentFragment, animation?:Animation)
+```
 
 Insert element after element with exact index in parent.
 
 <br/>
 
+## replaceAsync
 
-### `DomeManipulator.replaceAsync(oldElement: Element, newElement: Element, animationHide?:Animation, animationShow?:Animation)`
+```typescript
+DomeManipulator.replaceAsync(oldElement: Element, newElement: Element, animationHide?:Animation, animationShow?:Animation)
+```
 
 Replace one element with another element.
 
 <br/>
 
-### `DomeManipulator.removeElementAsync(element: Element, animation?:Animation)`
+## removeElementAsync
+
+```typescript
+DomeManipulator.removeElementAsync(element: Element, animation?:Animation)
+```
 
 Remove element from DOM.
 
 <br/>
 
-### `DomeManipulator.forEachChildrenOf(element:Element, action:(child:ChildNode)=>void)`
+## forEachChildrenOf
+
+```typescript
+DomeManipulator.forEachChildrenOf(element:Element, action:(child:ChildNode)=>void)
+```
 
 Do some action for each child nodes of element.
 
 <br/>
 
-### `DomeManipulator.removeAllChildrenAsync(element: Element, animation?:Animation)`
+## removeAllChildrenAsync
+
+```typescript
+DomeManipulator.removeAllChildrenAsync(element: Element, animation?:Animation)
+```
 
 Remove all children for element.
 
 <br/>
 
-### `DomeManipulator.appendChildAsync(containerElement:Element, child:Element, animation?:Animation)`
+## appendChildAsync
+
+```typescript
+DomeManipulator.appendChildAsync(containerElement:Element, child:Element, animation?:Animation)
+```
 
 Append child to container element.
 
 <br/>
 
-### `DomeManipulator.appendChildrenAsync(containerElement:Element, children:Element | Element[] | DocumentFragment | Text | string | null | undefined, animation?:Animation)`
+## appendChildrenAsync
+
+```typescript
+DomeManipulator.appendChildrenAsync(containerElement:Element, children:Element | Element[] | DocumentFragment | Text | string | null | undefined, animation?:Animation)
+```
 
 Append one or few children to container element.
 
 <br/>
 
-### `DomeManipulator.replaceAllChildrenAsync(...)`
+## replaceAllChildrenAsync
 
 ```typescript
     replaceAllChildrenAsync(
@@ -1066,54 +1134,77 @@ Replace all children for container element.
 
 <br/>
 
-### `DomeManipulator.isInDom(el: Element | undefined)`
+## isInDom
+
+```typescript
+DomeManipulator.isInDom(el: Element | undefined)
+```
 
 Check if element is in DOM. Uses `document.body.contains(el)` internally, so it could be not so fast.
 
 <br/>
 
-### `DomeManipulator.addCssClassAsync(element: Element, cssClassName: string, removeAfterMs?:number)`
+## addCssClassAsync
+
+```typescript
+DomeManipulator.addCssClassAsync(element: Element, cssClassName: string, removeAfterMs?:number)
+```
 
 Add css class to element and remove it after `removeAfterMs` milliseconds if provided.
 
 <br/>
 
-### `DomeManipulator.addCssClassesAsync(element: Element, cssClassNames: string[], removeAfterMs?:number)`
+## addCssClassesAsync
+
+```typescript
+DomeManipulator.addCssClassesAsync(element: Element, cssClassNames: string[], removeAfterMs?:number)
+```
 
 Add few css classes to element and remove them after `removeAfterMs` milliseconds if provided.
 
 <br/>
 
-### `DomeManipulator.removeCssClass(element: Element, cssClassName: string)`
+## removeCssClass
+
+```typescript
+DomeManipulator.removeCssClass(element: Element, cssClassName: string)
+```
 
 Remove css class from element.
 
 <br/>
 
-### `DomeManipulator.removeCssClasses(element: Element, cssClassNames: string[])`
+## removeCssClasses
+
+```typescript
+DomeManipulator.removeCssClasses(element: Element, cssClassNames: string[])
+```
 
 Remove few css classes from element.
 
 <br/> 
 
+## removeCssClasses
 
-### `DomeManipulator.setCssClasses(element: Element, value: CssClass)`
+```typescript
+DomeManipulator.setCssClasses(element: Element, value: CssClass)
+```
 
 Replace css classes for element.
 
-#### CssClass type
+## `CssClass` type
 
 ```typescript
 export type CssClass = {[key:string]:boolean|ObservableVariable<boolean>} | string[] | string
 ```
 
-Where value is an array like
+Where value is an array of strings:
 
 ```typescript
 ['class1', 'class2]
 ```
 
-or object
+or object {'className':isVisible}
 
 ```typescript
 {'class1':true, 'class2':false}
@@ -1140,7 +1231,11 @@ DomeManipulator.setCssClasses(myDiv, 'class1 class2')
 
 <br/>
 
-### `DomeManipulator.setAttribute(element: Element, name: string, value: any)`
+## setAttribute
+
+```typescript
+DomeManipulator.setAttribute(element: Element, name: string, value: any)
+```
 
 Change attribute for html element
 
@@ -1150,7 +1245,11 @@ DomeManipulator.setAttribute(myDiv, 'data-id', 100)
 
 <br/>
 
-### `DomeManipulator.hasFocus(el: Element):boolean`
+## hasFocus
+
+```typescript
+DomeManipulator.hasFocus(el: Element):boolean
+```
 
 Check if element has focus
 
@@ -1160,7 +1259,11 @@ DomeManipulator.hasFocus(myDiv) // boolean
 
 <br/>
 
-### `DomeManipulator.scrollIntoView(element: Element, paddingFromTop:number = 100)`
+## scrollIntoView
+
+```typescript
+DomeManipulator.scrollIntoView(element: Element, paddingFromTop:number = 100)
+```
 
 Smooth scroll element into view with some padding from top of the screen
 
@@ -1170,7 +1273,11 @@ DomeManipulator.scrollIntoView(myDiv)
 
 <br/>
 
-### `DomeManipulator.scrollToTop()`
+## scrollToTop
+
+```typescript
+DomeManipulator.scrollToTop()
+```
 
 Smooth scroll to top
 
@@ -1182,15 +1289,13 @@ DomeManipulator.scrollToTop()
 
 
 
-
-
 <br/>
 <br/>
 <br/>
 
 # DomeRouter
 
-Use DomeRouter for navigation in SinglePageApplication.
+Use DomeRouter for navigation in single page app.
 
 ```typescript
 DomeRouter.onRoute('/about', true, async (params, url) => {
@@ -1200,7 +1305,7 @@ DomeRouter.onRoute('/about', true, async (params, url) => {
 ```
 
 to navigate to another route without page reload use `DomeRouter.navigate('/url')`.
-Here is example of `Link` component:
+Here is an example of `Link` component:
 
 ```tsx
 interface Attrs{
@@ -1241,9 +1346,11 @@ export class Link extends DomeComponent<Attrs>{
 
 <br/>
 
-## DomeRouter API
+## maxHistoryUrlsCount
 
-### `DomeRouter.maxHistoryUrlsCount`
+```typescript
+DomeRouter.maxHistoryUrlsCount
+```
 
 Count of urls to keep to go back in history. The default value is 10.
 
@@ -1253,7 +1360,11 @@ DomeRouter.maxHistoryUrlsCount = 100
 
 <br/>
 
-### `DomeRouter.navigate(url:string)`
+## navigate
+
+```typescript
+DomeRouter.navigate(url:string)
+```
 
 Navigate to specific url
 
@@ -1263,7 +1374,11 @@ DomeRouter.navigate('/login')
 
 <br/>
 
-### `DomeRouter.changeUrl(url:string)`
+## changeUrl
+
+```typescript
+DomeRouter.changeUrl(url:string)
+```
 
 Just change the url without navigating.
 
@@ -1273,7 +1388,11 @@ DomeRouter.changeUrl('/fake-page')
 
 <br/>
 
-### `DomeRouter.getCurrentUrl():string`
+## getCurrentUrl
+
+```typescript
+DomeRouter.getCurrentUrl():string
+```
 
 Get current url pathname, like `/login`
 
@@ -1283,7 +1402,11 @@ console.log('currentUrl=', DomeRouter.getCurrentUrl())
 
 <br/>
 
-### `DomeRouter.getPreviousPageUrl(previousPageIndex:number=0):string|undefined`
+## getPreviousPageUrl
+
+```typescript
+DomeRouter.getPreviousPageUrl(previousPageIndex:number=0):string|undefined
+```
 
 Get url of previous page by index where 0 is previous page, 1 is previous page minus 1, etc...
 
@@ -1293,13 +1416,21 @@ console.log('previous url = ', DomeRouter.getPreviousPageUrl())
 
 <br/>
 
-### `DomeRouter.reloadCurrentPage(addToHistory:boolean = false)`
+## reloadCurrentPage
+
+```typescript
+DomeRouter.reloadCurrentPage(addToHistory:boolean = false)
+```
 
 Reload current page
 
 <br/>
 
-### `DomeRouter.resolveUrl(url:string = window.location.pathname, addToHistory:boolean = true)`
+## resolveUrl
+
+```typescript
+DomeRouter.resolveUrl(url:string = window.location.pathname, addToHistory:boolean = true)
+```
 
 Execute action defined for `url` in `onRoute` method
 
@@ -1309,7 +1440,11 @@ DomeRouter.resolveUrl('/about')
 
 <br/>
 
-### `DomeRouter.onRoute(route:string, exactMatch:boolean, action:RouteAction)`
+## onRoute
+
+```typescript
+DomeRouter.onRoute(route:string, exactMatch:boolean, action:RouteAction)
+```
 
 Add reaction on route change.
 Parameters:
@@ -1355,15 +1490,19 @@ DomeRouter.onRoute('/product/:productId<int>', true, (params, url) => {
 })
 ```
 
-### `DomeRouter.onNotFound(action:()=>void)`
+<br/>
+
+## onNotFound
+
+```typescript
+DomeRouter.onNotFound(action:()=>void)
+```
 
 This method will be executed if path doesn't match any of routes assigned by '.onRoute' methods
 
 ```typescript
 DomeRouter.onNotFound(() => changePage(<Page404 />))
 ```
-
-
 
 
 
@@ -1379,8 +1518,16 @@ DomeRouter.onNotFound(() => changePage(<Page404 />))
 import { React, DomeComponent, AnimatedText } from '@lexriver/dome'
 
 let myTextO = new ObservableVariable<string>('default text')
-<AnimatedText textO={myTextO} onHideAnimation={{cssClassName:'hideAnimation', timeMs:300}} onShowAnimation={{cssClassName:'showAnimation', timeMs:300}} />
 
+// later in render() method:
+
+<AnimatedText 
+    textO={myTextO} 
+    onHideAnimation={{cssClassName:'hideAnimation', timeMs:300}} 
+    onShowAnimation={{cssClassName:'showAnimation', timeMs:300}} 
+/>
+
+// then
 setTimeout(() => {
     myTextO.set('another text')
 }, 3000)
@@ -1403,15 +1550,15 @@ export class AnimatedListTest extends DomeComponent<Attrs>{
     animatedArray = new AnimatedArray<number>({
         animationHide:{cssClassName:cssAnimation.fadeOut1000, timeMs:1000},
         animationShow:{cssClassName:cssAnimation.fadeIn1000, timeMs:1000},
-        array: [],
-        getKey: (x:number) => 'key'+x,
-        getHtmlElement: (x:number) => {
+        array: [], // initial array
+        getKey: (x:number) => 'key'+x, // each element must have an unique key
+        getHtmlElement: (x:number) => { // render element
             return <div>the number is {x}</div>
         },
     })
 
     render(){
-        return <div></div>
+        return <div></div> // container to assign this.rootElement
     }
 
     afterRender(){
@@ -1468,7 +1615,7 @@ export class AnimatedListTest extends DomeComponent<Attrs>{
 
 # AnimatedTable
 
-Component `AnimatedTable` can be used to display html table where items couled be dynamically changed.
+Component `AnimatedTable` can be used to display html table where items could be dynamically changed.
 
 ```tsx
 interface Attrs{
