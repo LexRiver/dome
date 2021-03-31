@@ -12,7 +12,6 @@ export declare abstract class DomeComponent<Attrs> {
     protected init(): void;
     protected abstract render(): HTMLElement;
     protected afterRender(): void;
-    protected onMount(): void;
     updateAsync(): Promise<void>;
     scheduleUpdate: (this: unknown) => void;
     protected afterUpdate(): void;

@@ -6,3 +6,7 @@ export * from './DomeRouter';
 export * from './AnimatedArray';
 export * from './AnimatedTable';
 export * from './AnimatedText';
+export * from '@lexriver/async';
+export * from '@lexriver/observable';
+export * from '@lexriver/type-event';
+export * from '@lexriver/data-types';

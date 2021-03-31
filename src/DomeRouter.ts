@@ -12,7 +12,7 @@ interface Route{
 
 export module DomeRouter {
     const historyUrls:string[] = []
-    export let maxHistoryUrlsCount:number = 10
+    export let maxHistoryUrlsCount:number = 20
     const allRoutes:Route[] = []
     let onNotFoundAction:(()=>void)|undefined = undefined
 
@@ -26,6 +26,14 @@ export module DomeRouter {
         addUrlToHistory(url)
         executeAsync()
         DomeManipulator.scrollToTop()
+    }
+
+    export function goBack(){
+        window.history.go(-1)
+    }
+
+    export function goForward(){
+        window.history.go(+1)
     }
 
     export function changeUrl(url:string){

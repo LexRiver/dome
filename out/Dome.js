@@ -138,9 +138,7 @@ const build = (tagName, attrs, children) => {
         Object.keys(attrs).forEach(name => {
             const value = attrs[name];
             if (name === 'class' || name === 'className' || name === 'cssClasses') {
-                DomeManipulator.setCssClasses(el, value);
-            }
-            else if (name === 'dynamicCssClasses' || name === 'observableCssClasses') { //TODO: remove this?
+                //DomeManipulator.setCssClasses(el, value)
                 assignDynamicCssClasses(name, value, el);
             }
             else if (name === 'style') {
@@ -221,7 +219,9 @@ const build = (tagName, attrs, children) => {
  */
 function assignDynamicCssClasses(name, value, element) {
     if (DataTypes.isObjectWithKeys(value) == false) {
-        throw new Error(`Please provide object for ${name}, ex: {class1:true, class2:myVarO}`);
+        DomeManipulator.setCssClasses(element, value);
+        return;
+        //throw new Error(`Please provide object for ${name}, ex: {class1:true, class2:myVarO}`)
     }
     let resultArray = [];
     for (let [k, v] of Object.entries(value)) {
@@ -231,6 +231,8 @@ function assignDynamicCssClasses(name, value, element) {
         else if (checkIfObservable(v)) {
             let o = v;
             o.eventOnChange.subscribe((showThiCssClass) => {
+                if (!DomeManipulator.isInDom(element))
+                    return { unsubscribe: true }; //TODO: test it
                 // reassign whole attribute
                 DomeManipulator.setCssClasses(element, value);
             });

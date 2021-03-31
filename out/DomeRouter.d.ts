@@ -4,6 +4,8 @@ export declare type RouteAction = (params: {
 export declare module DomeRouter {
     let maxHistoryUrlsCount: number;
     function navigate(url: string): void;
+    function goBack(): void;
+    function goForward(): void;
     function changeUrl(url: string): void;
     function getCurrentUrl(): string;
     /**

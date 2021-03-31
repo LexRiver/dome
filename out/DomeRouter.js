@@ -3,7 +3,7 @@ const filename = '[DomeRouter]';
 export var DomeRouter;
 (function (DomeRouter) {
     const historyUrls = [];
-    DomeRouter.maxHistoryUrlsCount = 10;
+    DomeRouter.maxHistoryUrlsCount = 20;
     const allRoutes = [];
     let onNotFoundAction = undefined;
     window.addEventListener('popstate', (x) => {
@@ -17,6 +17,14 @@ export var DomeRouter;
         DomeManipulator.scrollToTop();
     }
     DomeRouter.navigate = navigate;
+    function goBack() {
+        window.history.go(-1);
+    }
+    DomeRouter.goBack = goBack;
+    function goForward() {
+        window.history.go(+1);
+    }
+    DomeRouter.goForward = goForward;
     function changeUrl(url) {
         window.history.replaceState(null, '', url);
         if (historyUrls.length > 0) {
