@@ -274,10 +274,12 @@ function assignDynamicCssClasses(name: string, value: {[key:string]:boolean|Obse
     }
     let resultArray: string[] = []
     for (let [k, v] of Object.entries(value)) {
-        if (DataTypes.isBoolean(v) && v) {
-            resultArray.push(k)
-        }
-        else if (checkIfObservable(v)) {
+        if (DataTypes.isBoolean(v)) {
+            if(v){
+                resultArray.push(k)
+            }
+
+        } else if (checkIfObservable(v)) {
             let o = v as ObservableValue<boolean>
             o.eventOnChange.subscribe((showThiCssClass) => {
                 if(!DomeManipulator.isInDom(element)) return {unsubscribe:true} //TODO: test it
@@ -288,7 +290,7 @@ function assignDynamicCssClasses(name: string, value: {[key:string]:boolean|Obse
                 resultArray.push(k)
             }
         }
-        else throw new Error(`Please provide classNames as a keys and boolean or Observable<boolean> for values for ${name}, ex: {class1:true, class2:myVarO}`)
+        else throw new Error(`Please provide classNames as a keys and boolean or Observable<boolean> for values. name='${name}', value='${value}', ex: {class1:true, class2:myVarO}`)
     }
     DomeManipulator.setCssClasses(element, resultArray) // yes, array of classes is ok here
 }
