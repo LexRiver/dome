@@ -1285,6 +1285,29 @@ Smooth scroll to top
 DomeManipulator.scrollToTop()
 ```
 
+<br/>
+
+## getCurrentScrollPosition
+
+```typescript
+DomeManipulator.getCurrentScrollPosition()
+```
+
+Return current Y-coordinate of scroll, pixels from top.
+
+<br/>
+
+## scrollToY(pxFromTop:number)
+```typescript
+DomeManipulator.scrollToY(pxFromTop:number)
+```
+
+Scroll page to Y-coordinate of scroll, pixels from top.
+
+```typescript
+DomeManipulator.scrollToY(200)
+```
+
 
 
 

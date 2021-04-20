@@ -10,16 +10,33 @@ interface Route{
     action:RouteAction
 }
 
+interface HistoryUrl{
+    url:string
+    scroll:number
+}
+
 export module DomeRouter {
-    const historyUrls:string[] = []
+    const historyUrls:HistoryUrl[] = []
     export let maxHistoryUrlsCount:number = 20
     const allRoutes:Route[] = []
     let onNotFoundAction:(()=>void)|undefined = undefined
 
-    window.addEventListener('popstate', (x) => {
-        console.log(filename, 'window.popstate event', x)
+    window.addEventListener('popstate', (e) => {
+        console.log(filename, 'window.popstate event', e)
         executeAsync()
+        DomeManipulator.scrollToY(getScrollPositionForUrl(window.location.pathname))
     })
+
+    function getScrollPositionForUrl(url:string){
+        // well, let's find the last url? or which index? 
+        let result = 0
+        for(let item of historyUrls){
+            if(item.url === url){
+                result = item.scroll        
+            }
+        }
+        return result
+    }
 
     export function navigate(url:string){
         window.history.pushState(null, '', url)
@@ -39,12 +56,12 @@ export module DomeRouter {
     export function changeUrl(url:string){
         window.history.replaceState(null, '', url)
         if(historyUrls.length>0){
-            historyUrls[historyUrls.length-1] = url
+            historyUrls[historyUrls.length-1].url = url
         }
     }
 
     function addUrlToHistory(url:string){
-        historyUrls.push(url)
+        historyUrls.push({url, scroll: DomeManipulator.getCurrentScrollPosition()})
         while(historyUrls.length>maxHistoryUrlsCount){
             historyUrls.shift()
         }
@@ -62,7 +79,7 @@ export module DomeRouter {
     export function getPreviousPageUrl(previousPageIndex:number=0):string|undefined{
         //if(historyUrls.length==0) return undefined
         let index = historyUrls.length-2-previousPageIndex
-        if(index >= 0 && index < historyUrls.length) return historyUrls[index]
+        if(index >= 0 && index < historyUrls.length) return historyUrls[index].url
         return undefined
     }
 

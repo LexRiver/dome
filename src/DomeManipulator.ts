@@ -307,9 +307,15 @@ export module DomeManipulator {
         }
     }
 
-    function getCurrentScrollPosition(){
+    export function getCurrentScrollPosition(){
         return document.documentElement.scrollTop || document.body.scrollTop;
     }
+
+    export function scrollToY(pxFromTop:number){
+        window.scrollTo({top: pxFromTop, behavior: 'smooth'})
+    }
+
+
 
 
 
