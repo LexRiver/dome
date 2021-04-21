@@ -36,4 +36,12 @@ export declare module DomeManipulator {
     function hasFocus(el: Element): boolean;
     function scrollIntoView(element: Element, paddingFromTop?: number): void;
     const scrollToTop: () => void;
+    function getCurrentScrollPosition(): number;
+    function scrollToAsync(p: {
+        pxFromTop?: number;
+        pxFromLeft?: number;
+        smooth?: boolean;
+        msStep?: number;
+        maxMsToWait?: number;
+    }): Promise<void>;
 }

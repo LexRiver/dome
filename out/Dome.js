@@ -225,8 +225,10 @@ function assignDynamicCssClasses(name, value, element) {
     }
     let resultArray = [];
     for (let [k, v] of Object.entries(value)) {
-        if (DataTypes.isBoolean(v) && v) {
-            resultArray.push(k);
+        if (DataTypes.isBoolean(v)) {
+            if (v) {
+                resultArray.push(k);
+            }
         }
         else if (checkIfObservable(v)) {
             let o = v;
@@ -240,8 +242,10 @@ function assignDynamicCssClasses(name, value, element) {
                 resultArray.push(k);
             }
         }
-        else
-            throw new Error(`Please provide classNames as a keys and boolean or Observable<boolean> for values for ${name}, ex: {class1:true, class2:myVarO}`);
+        else {
+            console.error(`Please provide classNames as a keys and boolean or Observable<boolean> for values., ex: {class1:true, class2:myVarO}`, 'name=', name, 'value=', value, 'typeof value =', typeof value);
+            throw new Error('Wrong value for `class` attribute');
+        }
     }
     DomeManipulator.setCssClasses(element, resultArray); // yes, array of classes is ok here
 }

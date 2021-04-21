@@ -264,6 +264,7 @@ export var DomeManipulator;
     DomeManipulator.scrollIntoView = scrollIntoView;
     // https://stackoverflow.com/questions/15935318/smooth-scroll-to-top/55926067
     DomeManipulator.scrollToTop = () => {
+        console.log('scrollToTop');
         let position = getCurrentScrollPosition();
         if (position > 0) {
             window.requestAnimationFrame(DomeManipulator.scrollToTop);
@@ -278,4 +279,38 @@ export var DomeManipulator;
     function getCurrentScrollPosition() {
         return document.documentElement.scrollTop || document.body.scrollTop;
     }
+    DomeManipulator.getCurrentScrollPosition = getCurrentScrollPosition;
+    async function scrollToAsync(p) {
+        const msStep = p.msStep ?? 50;
+        const maxMsToWait = p.maxMsToWait ?? 5000;
+        try {
+            if (p.pxFromLeft || p.pxFromTop) {
+                await Async.waitForFunctionToReturnTrueAsync(() => {
+                    if (p.pxFromTop) {
+                        return document.body.clientHeight >= p.pxFromTop;
+                    }
+                    if (p.pxFromLeft) {
+                        return document.body.clientWidth >= p.pxFromLeft;
+                    }
+                    return false;
+                }, msStep, maxMsToWait);
+            }
+        }
+        catch (error) {
+            // ignore error
+        }
+        //console.log('scrollToY', pxFromTop, 'height=', document.body.clientHeight)
+        let scrollOptions = {};
+        if (p.pxFromTop) {
+            scrollOptions.top = p.pxFromTop;
+        }
+        if (p.pxFromLeft) {
+            scrollOptions.left = p.pxFromLeft;
+        }
+        if (p.smooth) {
+            scrollOptions.behavior = 'smooth';
+        }
+        window.scrollTo(scrollOptions);
+    }
+    DomeManipulator.scrollToAsync = scrollToAsync;
 })(DomeManipulator || (DomeManipulator = {}));

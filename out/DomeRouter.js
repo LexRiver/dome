@@ -6,10 +6,23 @@ export var DomeRouter;
     DomeRouter.maxHistoryUrlsCount = 20;
     const allRoutes = [];
     let onNotFoundAction = undefined;
-    window.addEventListener('popstate', (x) => {
-        console.log(filename, 'window.popstate event', x);
-        executeAsync();
+    window.addEventListener('popstate', async (e) => {
+        //console.log(filename, 'window.popstate event', e, 'historyUrl=', historyUrls)
+        await executeAsync();
+        await DomeManipulator.scrollToAsync({
+            pxFromTop: getScrollPositionForUrl(window.location.pathname)
+        });
     });
+    function getScrollPositionForUrl(url) {
+        // well, let's find the last url? or which index? 
+        let result = 0;
+        for (let item of historyUrls) {
+            if (item.url === url) {
+                result = item.scroll;
+            }
+        }
+        return result;
+    }
     function navigate(url) {
         window.history.pushState(null, '', url);
         addUrlToHistory(url);
@@ -28,14 +41,18 @@ export var DomeRouter;
     function changeUrl(url) {
         window.history.replaceState(null, '', url);
         if (historyUrls.length > 0) {
-            historyUrls[historyUrls.length - 1] = url;
+            historyUrls[historyUrls.length - 1].url = url;
         }
     }
     DomeRouter.changeUrl = changeUrl;
     function addUrlToHistory(url) {
-        historyUrls.push(url);
+        historyUrls.push({ url, scroll: 0 });
         while (historyUrls.length > DomeRouter.maxHistoryUrlsCount) {
             historyUrls.shift();
+        }
+        // save scroll position to previous url
+        if (historyUrls.length > 1) {
+            historyUrls[historyUrls.length - 2].scroll = DomeManipulator.getCurrentScrollPosition();
         }
     }
     function getCurrentUrl() {
@@ -50,7 +67,7 @@ export var DomeRouter;
         //if(historyUrls.length==0) return undefined
         let index = historyUrls.length - 2 - previousPageIndex;
         if (index >= 0 && index < historyUrls.length)
-            return historyUrls[index];
+            return historyUrls[index].url;
         return undefined;
     }
     DomeRouter.getPreviousPageUrl = getPreviousPageUrl;
@@ -203,7 +220,7 @@ export var DomeRouter;
             }
         }
         if (countOfFoundRoutes == 0 && onNotFoundAction) {
-            console.log('DomeRouter', 'onNotFoundAction()');
+            //console.log('DomeRouter', 'onNotFoundAction()')
             onNotFoundAction();
         }
     }

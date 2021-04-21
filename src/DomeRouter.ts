@@ -21,10 +21,12 @@ export module DomeRouter {
     const allRoutes:Route[] = []
     let onNotFoundAction:(()=>void)|undefined = undefined
 
-    window.addEventListener('popstate', (e) => {
-        console.log(filename, 'window.popstate event', e)
-        executeAsync()
-        DomeManipulator.scrollToY(getScrollPositionForUrl(window.location.pathname))
+    window.addEventListener('popstate', async (e) => {
+        //console.log(filename, 'window.popstate event', e, 'historyUrl=', historyUrls)
+        await executeAsync()
+        await DomeManipulator.scrollToAsync({
+            pxFromTop: getScrollPositionForUrl(window.location.pathname)
+        })
     })
 
     function getScrollPositionForUrl(url:string){
@@ -61,9 +63,14 @@ export module DomeRouter {
     }
 
     function addUrlToHistory(url:string){
-        historyUrls.push({url, scroll: DomeManipulator.getCurrentScrollPosition()})
+        historyUrls.push({url, scroll: 0})
         while(historyUrls.length>maxHistoryUrlsCount){
             historyUrls.shift()
+        }
+
+        // save scroll position to previous url
+        if(historyUrls.length>1){
+            historyUrls[historyUrls.length-2].scroll = DomeManipulator.getCurrentScrollPosition()
         }
     }
 
@@ -235,7 +242,7 @@ export module DomeRouter {
             }
         }
         if(countOfFoundRoutes==0 && onNotFoundAction){
-            console.log('DomeRouter', 'onNotFoundAction()')
+            //console.log('DomeRouter', 'onNotFoundAction()')
             onNotFoundAction()
         }
     }

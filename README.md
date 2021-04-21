@@ -1297,15 +1297,34 @@ Return current Y-coordinate of scroll, pixels from top.
 
 <br/>
 
-## scrollToY(pxFromTop:number)
+## async scrollToAsync
 ```typescript
-DomeManipulator.scrollToY(pxFromTop:number)
+await DomeManipulator.scrollToAsync(p:{
+        pxFromTop?:number, 
+        pxFromLeft?:number,
+        smooth?:boolean,
+        msStep?:number, 
+        maxMsToWait?:number
+    })
 ```
 
-Scroll page to Y-coordinate of scroll, pixels from top.
+Wait for `document.body.clientHeight` or `document.body.clientWidth` to be enough to scroll to `pxFromTop` or `pxFromLeft` and then scroll to that position.
+
+Parameters
+
+* `pxFromTop?:number` : amount of pixels from top to scroll to
+* `pxFromLeft?:number` : amount of pixels from left to scroll to
+* `smooth?:boolean` : true for smooth scroll. Default value is <strong>false</strong>.
+* `msStep?:number` : check if scroll is possible at each milliseconds step. Default value is <strong>50</strong>
+* `maxMsToWait?:number` : max amount of milliseconds to wait for to be able to scroll. Default value is <strong>5000</strong>
 
 ```typescript
-DomeManipulator.scrollToY(200)
+DomeManipulator.scrollToY({
+    pxFromTop: 200,
+    smooth: true,
+    msStep: 100,
+    maxMsToWait: 20*1000
+})
 ```
 
 
