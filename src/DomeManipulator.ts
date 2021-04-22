@@ -295,7 +295,7 @@ export module DomeManipulator {
 
     // https://stackoverflow.com/questions/15935318/smooth-scroll-to-top/55926067
     export const scrollToTop = () => {
-        console.log('scrollToTop')
+        //console.log('scrollToTop')
         let position = getCurrentScrollPosition()
 
         if (position > 0) {
@@ -319,27 +319,10 @@ export module DomeManipulator {
         msStep?:number, 
         maxMsToWait?:number
     }){
+        //console.log('scrollToAsync', p)
         const msStep = p.msStep ?? 50
         const maxMsToWait = p.maxMsToWait ?? 5000
 
-        try {
-            if(p.pxFromLeft || p.pxFromTop){
-                await Async.waitForFunctionToReturnTrueAsync(() => {
-                    if(p.pxFromTop){
-                        return document.body.clientHeight >= p.pxFromTop
-                    }
-                    if(p.pxFromLeft){
-                        return document.body.clientWidth >= p.pxFromLeft
-                    }
-                    return false
-                }, msStep, maxMsToWait)
-            }
-            
-        } catch(error){
-            // ignore error
-
-        }
-        //console.log('scrollToY', pxFromTop, 'height=', document.body.clientHeight)
         let scrollOptions:ScrollToOptions = {
         }
 
@@ -352,7 +335,27 @@ export module DomeManipulator {
         if(p.smooth){
             scrollOptions.behavior = 'smooth'
         }
-        
+
+
+        try {
+            if(p.pxFromLeft || p.pxFromTop){
+                await Async.waitForFunctionToReturnTrueAsync(() => {
+                    if(p.pxFromTop){
+                        return document.body.scrollHeight >= p.pxFromTop
+                    }
+                    if(p.pxFromLeft){
+                        return document.body.scrollWidth >= p.pxFromLeft
+                    }
+                    return false
+                }, msStep, maxMsToWait)
+            }
+            
+        } catch(error){
+            // ignore error
+
+        }
+        //console.log('scrollToY', pxFromTop, 'height=', document.body.clientHeight)
+        //console.log('scrollToAsync now', scrollOptions)
         window.scrollTo(scrollOptions)
     }
 

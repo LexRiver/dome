@@ -264,7 +264,7 @@ export var DomeManipulator;
     DomeManipulator.scrollIntoView = scrollIntoView;
     // https://stackoverflow.com/questions/15935318/smooth-scroll-to-top/55926067
     DomeManipulator.scrollToTop = () => {
-        console.log('scrollToTop');
+        //console.log('scrollToTop')
         let position = getCurrentScrollPosition();
         if (position > 0) {
             window.requestAnimationFrame(DomeManipulator.scrollToTop);
@@ -281,25 +281,9 @@ export var DomeManipulator;
     }
     DomeManipulator.getCurrentScrollPosition = getCurrentScrollPosition;
     async function scrollToAsync(p) {
+        //console.log('scrollToAsync', p)
         const msStep = p.msStep ?? 50;
         const maxMsToWait = p.maxMsToWait ?? 5000;
-        try {
-            if (p.pxFromLeft || p.pxFromTop) {
-                await Async.waitForFunctionToReturnTrueAsync(() => {
-                    if (p.pxFromTop) {
-                        return document.body.clientHeight >= p.pxFromTop;
-                    }
-                    if (p.pxFromLeft) {
-                        return document.body.clientWidth >= p.pxFromLeft;
-                    }
-                    return false;
-                }, msStep, maxMsToWait);
-            }
-        }
-        catch (error) {
-            // ignore error
-        }
-        //console.log('scrollToY', pxFromTop, 'height=', document.body.clientHeight)
         let scrollOptions = {};
         if (p.pxFromTop) {
             scrollOptions.top = p.pxFromTop;
@@ -310,6 +294,24 @@ export var DomeManipulator;
         if (p.smooth) {
             scrollOptions.behavior = 'smooth';
         }
+        try {
+            if (p.pxFromLeft || p.pxFromTop) {
+                await Async.waitForFunctionToReturnTrueAsync(() => {
+                    if (p.pxFromTop) {
+                        return document.body.scrollHeight >= p.pxFromTop;
+                    }
+                    if (p.pxFromLeft) {
+                        return document.body.scrollWidth >= p.pxFromLeft;
+                    }
+                    return false;
+                }, msStep, maxMsToWait);
+            }
+        }
+        catch (error) {
+            // ignore error
+        }
+        //console.log('scrollToY', pxFromTop, 'height=', document.body.clientHeight)
+        //console.log('scrollToAsync now', scrollOptions)
         window.scrollTo(scrollOptions);
     }
     DomeManipulator.scrollToAsync = scrollToAsync;
