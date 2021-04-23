@@ -225,7 +225,10 @@ function assignDynamicCssClasses(name, value, element) {
     }
     let resultArray = [];
     for (let [k, v] of Object.entries(value)) {
-        if (DataTypes.isBoolean(v)) {
+        if (v === undefined) {
+            //skip
+        }
+        else if (DataTypes.isBoolean(v)) {
             if (v) {
                 resultArray.push(k);
             }

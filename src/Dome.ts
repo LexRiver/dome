@@ -274,7 +274,10 @@ function assignDynamicCssClasses(name: string, value: {[key:string]:boolean|Obse
     }
     let resultArray: string[] = []
     for (let [k, v] of Object.entries(value)) {
-        if (DataTypes.isBoolean(v)) {
+        if(v === undefined){
+            //skip
+            
+        } else if (DataTypes.isBoolean(v)) {
             if(v){
                 resultArray.push(k)
             }
