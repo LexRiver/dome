@@ -49,38 +49,43 @@ export class AnimatedTable extends DomeComponent {
         //this.animatedArray.update(this.attrs.items, this.el)
     }
     async updateAsync() {
-        if (this.attrs.renderLoading) {
-            this.refLoading = await DomeManipulator.replaceAsync(this.refLoading, this.attrs.renderLoading());
-        }
-        if (this.attrs.isLoadingO && this.attrs.isLoadingO.get()) {
-            // show loading
-            await DomeManipulator.unhideElementAsync(this.refLoading, this.attrs.animationShowLoading);
-        }
-        else {
-            // hide loading
-            await DomeManipulator.hideElementAsync(this.refLoading, this.attrs.animationHideLoading);
-        }
-        const items = this.attrs.itemsO.get();
-        const currentCount = items.length;
-        if (currentCount == 0) {
-            // render empty list
-            await DomeManipulator.hideElementAsync(this.refTable, this.attrs.animationHideTable);
-            if (this.attrs.renderEmptyList) {
-                this.refEmptyList = await DomeManipulator.replaceAsync(this.refEmptyList, this.attrs.renderEmptyList());
+        try {
+            if (this.attrs.renderLoading) {
+                this.refLoading = await DomeManipulator.replaceAsync(this.refLoading, this.attrs.renderLoading());
             }
-            await DomeManipulator.unhideElementAsync(this.refEmptyList, this.attrs.animationShowEmptyList);
+            if (this.attrs.isLoadingO && this.attrs.isLoadingO.get()) {
+                // show loading
+                await DomeManipulator.unhideElementAsync(this.refLoading, this.attrs.animationShowLoading);
+            }
+            else {
+                // hide loading
+                await DomeManipulator.hideElementAsync(this.refLoading, this.attrs.animationHideLoading);
+            }
+            const items = this.attrs.itemsO.get();
+            const currentCount = items.length;
+            if (currentCount == 0) {
+                // render empty list
+                await DomeManipulator.hideElementAsync(this.refTable, this.attrs.animationHideTable);
+                if (this.attrs.renderEmptyList) {
+                    this.refEmptyList = await DomeManipulator.replaceAsync(this.refEmptyList, this.attrs.renderEmptyList());
+                }
+                await DomeManipulator.unhideElementAsync(this.refEmptyList, this.attrs.animationShowEmptyList);
+            }
+            else {
+                // render list with items
+                await DomeManipulator.hideElementAsync(this.refEmptyList, this.attrs.animationHideEmptyList);
+                if (this.attrs.renderTableHead) {
+                    this.refTableHead = await DomeManipulator.replaceAsync(this.refTableHead, this.attrs.renderTableHead(items));
+                }
+                if (this.attrs.renderTableFooter) {
+                    this.refTableFooter = await DomeManipulator.replaceAsync(this.refTableFooter, this.attrs.renderTableFooter(items));
+                }
+                await DomeManipulator.unhideElementAsync(this.refTable, this.attrs.animationShowTable);
+                this.animatedArray.update(items, this.refTableBody);
+            }
         }
-        else {
-            // render list with items
-            await DomeManipulator.hideElementAsync(this.refEmptyList, this.attrs.animationHideEmptyList);
-            if (this.attrs.renderTableHead) {
-                this.refTableHead = await DomeManipulator.replaceAsync(this.refTableHead, this.attrs.renderTableHead(items));
-            }
-            if (this.attrs.renderTableFooter) {
-                this.refTableFooter = await DomeManipulator.replaceAsync(this.refTableFooter, this.attrs.renderTableFooter(items));
-            }
-            await DomeManipulator.unhideElementAsync(this.refTable, this.attrs.animationShowTable);
-            this.animatedArray.update(items, this.refTableBody);
+        catch (x) {
+            console.error('AnimatedTable update failed', x);
         }
     }
 }

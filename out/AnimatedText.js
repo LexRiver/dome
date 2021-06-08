@@ -14,6 +14,11 @@ export class AnimatedText extends DomeComponent {
     async updateAsync() {
         if (!this.rootElement)
             return;
-        this.rootElement = await DomeManipulator.replaceAsync(this.rootElement, this.render(), this.attrs.onHideAnimation, this.attrs.onShowAnimation);
+        try {
+            this.rootElement = await DomeManipulator.replaceAsync(this.rootElement, this.render(), this.attrs.onHideAnimation, this.attrs.onShowAnimation);
+        }
+        catch (x) {
+            console.error('AnimatedText update failed', x);
+        }
     }
 }

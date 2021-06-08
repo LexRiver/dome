@@ -72,6 +72,12 @@ export module DomeManipulator {
 
 
     export async function replaceAsync(oldElement: Element, newElement: Element, animationHide?:Animation, animationShow?:Animation) {
+        if(!oldElement.parentNode){
+            // almost impossible if in DOM
+            console.error('replaceAsync() failed, no parentNode.', 'oldElement=', oldElement)
+            throw new Error('no parent node for replaceAsync')
+        }
+        
         // hide
         if(animationHide){
             await addCssClassAsync(oldElement, animationHide.cssClassName, animationHide.timeMs)
@@ -81,7 +87,7 @@ export module DomeManipulator {
         const parent = oldElement.parentNode
         if (!parent) {
             //TODO: do not throw error here?
-            console.error('replaceAsync() failed, no parent', 'oldElement=', oldElement, 'type=', typeof oldElement, 'parent=', oldElement.parentElement, oldElement.parentNode)
+            console.error('replaceAsync() failed, no parent. Probably node was deleted while hide animation.', 'oldElement=', oldElement, 'type=', typeof oldElement, 'parent=', oldElement.parentElement, oldElement.parentNode)
             throw new Error('no parent for replaceAsync()')
         }
         parent.replaceChild(newElement, oldElement)
