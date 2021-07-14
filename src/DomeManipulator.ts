@@ -290,7 +290,7 @@ export module DomeManipulator {
         //const positionAfter = getCurrentScrollPosition()
         //console.log('before=', positionBefore, 'after=', positionAfter)
         let expectedPosition = element.getBoundingClientRect().top + window.pageYOffset;
-        if(expectedPosition<positionBefore){
+        if(expectedPosition>positionBefore){
             expectedPosition += paddingFromTop
         } else {
             expectedPosition -= paddingFromTop
