@@ -1144,6 +1144,16 @@ Check if element is in DOM. Uses `document.body.contains(el)` internally, so it 
 
 <br/>
 
+## isOnScreen
+
+```typescript
+DomeManipulator.isOnScreen(el: ELement | undefined)
+```
+
+Check if element is on screen now.
+
+<br/>
+
 ## addCssClassAsync
 
 ```typescript

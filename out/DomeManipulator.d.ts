@@ -18,6 +18,7 @@ export declare module DomeManipulator {
     function appendChildrenAsync(containerElement: Element, children: Element | Element[] | DocumentFragment | Text | string | null | undefined, animation?: Animation): Promise<void>;
     function replaceAllChildrenAsync(containerElement: Element, childrenToInsert: Element | Element[] | DocumentFragment | Text | string | null | undefined, animationForHide?: Animation, animationForShow?: Animation): Promise<void>;
     function isInDom(el: Element | undefined): boolean;
+    function isOnScreen(el: Element | undefined): boolean;
     function addCssClassAsync(element: Element, cssClassName: string, removeAfterMs?: number): Promise<void>;
     function addCssClassesAsync(element: Element, cssClassNames: string[], removeAfterMs?: number): Promise<void>;
     function removeCssClass(element: Element, cssClassName: string): void;

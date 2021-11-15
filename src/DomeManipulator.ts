@@ -201,6 +201,13 @@ export module DomeManipulator {
         return document.body.contains(el)
     }
 
+    export function isOnScreen(el:Element|undefined){
+        if(!el) return false
+        var rect = el.getBoundingClientRect()
+        var viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight)
+        return !(rect.bottom < 0 || rect.top - viewHeight >= 0)
+    }
+
     export async function addCssClassAsync(element: Element, cssClassName: string, removeAfterMs?:number) {
         if(element.nodeType !== Node.ELEMENT_NODE) return
         element.classList.add(cssClassName)
@@ -285,17 +292,18 @@ export module DomeManipulator {
     }
 
     export function scrollIntoView(element: Element, paddingFromTop:number = 100) {
-        const positionBefore = getCurrentScrollPosition()
+        if(isOnScreen(element)) {
+            return  // no need to scroll
+        }
+        //const positionBefore = getCurrentScrollPosition()
         //element.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
         //const positionAfter = getCurrentScrollPosition()
         //console.log('before=', positionBefore, 'after=', positionAfter)
         let expectedPosition = element.getBoundingClientRect().top + window.pageYOffset;
-        if(expectedPosition>positionBefore){
-            expectedPosition += paddingFromTop
-        } else {
-            expectedPosition -= paddingFromTop
-        }
+        expectedPosition -= paddingFromTop
         window.scrollTo({top: expectedPosition, behavior: 'smooth'});
+
+        
         
     }
 
