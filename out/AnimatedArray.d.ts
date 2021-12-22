@@ -11,6 +11,7 @@ export declare class AnimatedArray<T> {
         getHtmlElement: (o: T) => HTMLElement;
         animationShow?: Animation;
         animationHide?: Animation;
+        emptyList?: HTMLElement;
     };
     arrayOfKeyToElement: KeyToElementPair[];
     constructor(params: {
@@ -20,6 +21,7 @@ export declare class AnimatedArray<T> {
         getHtmlElement: (o: T) => HTMLElement;
         animationShow?: Animation;
         animationHide?: Animation;
+        emptyList?: HTMLElement;
     });
     get size(): number;
     update(array: T[], parentElement?: HTMLElement | Element): void;

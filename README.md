@@ -1607,6 +1607,7 @@ export class AnimatedListTest extends DomeComponent<Attrs>{
         getHtmlElement: (x:number) => { // render element
             return <div>the number is {x}</div>
         },
+        emptyList:<div>Loading</div>
     })
 
     render(){

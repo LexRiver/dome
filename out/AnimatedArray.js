@@ -17,6 +17,13 @@ export class AnimatedArray {
             console.warn('AnimatedArray unable to update, no parentElement');
             return;
         }
+        if (array.length == 0 && this.params.emptyList) {
+            DomeManipulator.replaceAllChildrenAsync(parentElement, this.params.emptyList);
+            return;
+        }
+        if (array.length > 0 && this.params.emptyList) {
+            DomeManipulator.removeElementAsync(this.params.emptyList, this.params.animationHide);
+        }
         //let arrayOfKeyToElement:KeyToElementPair[] = []
         let newArrayOfKeys = array.map((item) => this.params.getKey(item));
         let oldArrayOfKeys = this.arrayOfKeyToElement.map(x => x.key);

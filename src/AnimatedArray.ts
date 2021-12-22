@@ -17,6 +17,8 @@ export class AnimatedArray<T>{
         getHtmlElement:(o:T)=>HTMLElement,
         animationShow?:Animation
         animationHide?:Animation
+        //renderEmptyList?:()=>HTMLElement
+        emptyList?:HTMLElement
     }){
         if(params.array && params.parentElement){
             this.update(params.array)
@@ -32,6 +34,15 @@ export class AnimatedArray<T>{
         if(!parentElement){
             console.warn('AnimatedArray unable to update, no parentElement')
             return
+        }
+
+        if(array.length == 0 && this.params.emptyList){
+            DomeManipulator.replaceAllChildrenAsync(parentElement, this.params.emptyList)    
+            return
+        }
+
+        if(array.length > 0 && this.params.emptyList){
+            DomeManipulator.removeElementAsync(this.params.emptyList, this.params.animationHide)
         }
 
         //let arrayOfKeyToElement:KeyToElementPair[] = []
