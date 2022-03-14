@@ -2,7 +2,7 @@
     "type": "module",
     "sideEffects": false,
     "name": "@lexriver/dome",
-    "version": "1.4.0",
+    "version": "1.4.1",
     "description": "",
     "main": "out/index.js",
     "types": "out/index.d.ts",
@@ -17,6 +17,10 @@
         "DOM"
     ],
     "author": "LexRiver <LexRiver@gmail.com> (https://github.com/LexRiver/)",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/LexRiver/dome.git"
+    },
     "license": "MIT",
     "devDependencies": {
         "@types/node": "^12.12.42",
