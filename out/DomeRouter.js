@@ -8,8 +8,9 @@ export var DomeRouter;
     let onNotFoundAction = undefined;
     window.addEventListener('popstate', async (e) => {
         // on go back
-        //console.log(filename, 'window.popstate event', e, 'historyUrl=', historyUrls)
+        console.log(filename, 'window.popstate event', e, 'historyUrls=', historyUrls);
         const url = window.location.pathname;
+        addUrlToHistory(url);
         await executeAsync(url, getScrollPositionForUrl(url));
         // await DomeManipulator.scrollToAsync({
         //     pxFromTop: getScrollPositionForUrl(window.location.pathname)
@@ -64,6 +65,8 @@ export var DomeRouter;
         if (historyUrls.length > 1) {
             historyUrls[historyUrls.length - 2].scroll = DomeManipulator.getCurrentScrollPosition();
         }
+        console.log('adding url to history', url);
+        console.log('historyUrls=', historyUrls);
     }
     function getCurrentUrl() {
         return historyUrls.length > 0 ? historyUrls[historyUrls.length - 1] : window.location.pathname;
