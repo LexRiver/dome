@@ -8,7 +8,12 @@ export declare module DomeRouter {
     function goForward(): void;
     function changeUrl(url: string): void;
     function getCurrentUrl(): string;
-    function resolveUrl(url?: string): void;
+    /**
+     * get previous page url navigated by router
+     * @param previousPageIndex 0=previousPage, 1=previousPage-1, etc
+     */
+    function getPreviousPageUrl(previousPageIndex?: number): string | undefined;
+    function resolveUrl(url?: string, addToHistory?: boolean): void;
     function onRoute(route: string, exactMatch: boolean, action: RouteAction): void;
     function onNotFound(action: () => void): void;
     /**

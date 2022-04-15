@@ -112,9 +112,9 @@ export module DomeRouter {
     //     executeAsync(url, getScrollPositionForUrl(url)) // TODO: check
     // }
 
-    export function resolveUrl(url:string = window.location.pathname){
-        // if(addToHistory) addUrlToHistory(window.location.pathname)
-        executeAsync(url, getScrollPositionForUrl(url)) // TODO: check
+    export function resolveUrl(url:string = window.location.pathname, addToHistory = true){
+        if(addToHistory) addUrlToHistory(window.location.pathname)
+        executeAsync(url, getScrollPositionForUrl(url))
     }
 
     export function onRoute(route:string, exactMatch:boolean, action:RouteAction){
