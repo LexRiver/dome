@@ -1,42 +1,37 @@
 import { DomeManipulator } from "./DomeManipulator";
 const filename = '[DomeRouter]';
+// interface HistoryUrl{
+//     url:string
+//     scroll:number
+// }
 export var DomeRouter;
 (function (DomeRouter) {
-    const historyUrls = [];
+    //const historyUrls:HistoryUrl[] = []
+    const scrollPositionByUrl = new Map();
     DomeRouter.maxHistoryUrlsCount = 20;
     const allRoutes = [];
     let onNotFoundAction = undefined;
     window.addEventListener('popstate', async (e) => {
-        // on go back
-        console.log(filename, 'window.popstate event', e, 'historyUrls=', historyUrls);
+        // on go back/forward
+        //console.log(filename, 'window.popstate event', e, 'historyUrls=', historyUrls)
         const url = window.location.pathname;
         await executeAsync(url, getScrollPositionForUrl(url));
-        addUrlToHistory(url);
-        // await DomeManipulator.scrollToAsync({
-        //     pxFromTop: getScrollPositionForUrl(window.location.pathname)
-        // })
+        await DomeManipulator.scrollToAsync({
+            pxFromTop: getScrollPositionForUrl(window.location.pathname)
+        });
     });
     function getScrollPositionForUrl(url) {
-        // well, let's find the last url? or which index? 
-        //let result = 0
-        for (let i = historyUrls.length - 1; i >= 0; i--) {
-            const item = historyUrls[i];
-            if (item.url === url) {
-                //result = item.scroll
-                return item.scroll;
-            }
-        }
-        return 0;
-        // for(let item of historyUrls){
-        //     if(item.url === url){
-        //         result = item.scroll        
-        //     }
-        // }
-        // return result
+        return scrollPositionByUrl.get(url) ?? 0;
+    }
+    function saveScrollPositionForUrl(url) {
+        scrollPositionByUrl.set(url, DomeManipulator.getCurrentScrollPosition());
+    }
+    function saveScrollPositionForCurrentUrl() {
+        scrollPositionByUrl.set(getCurrentUrl(), DomeManipulator.getCurrentScrollPosition());
     }
     function navigate(url) {
+        saveScrollPositionForCurrentUrl();
         window.history.pushState(null, '', url);
-        addUrlToHistory(url);
         executeAsync(url, 0);
         DomeManipulator.scrollToTop();
     }
@@ -51,49 +46,45 @@ export var DomeRouter;
     DomeRouter.goForward = goForward;
     function changeUrl(url) {
         window.history.replaceState(null, '', url);
-        if (historyUrls.length > 0) {
-            historyUrls[historyUrls.length - 1].url = url;
-        }
+        // if(historyUrls.length>0){
+        //     historyUrls[historyUrls.length-1].url = url
+        // }
     }
     DomeRouter.changeUrl = changeUrl;
-    function addUrlToHistory(url) {
-        historyUrls.push({ url, scroll: 0 });
-        while (historyUrls.length > DomeRouter.maxHistoryUrlsCount) {
-            historyUrls.shift();
-        }
-        // save scroll position to previous url
-        if (historyUrls.length > 1) {
-            historyUrls[historyUrls.length - 2].scroll = DomeManipulator.getCurrentScrollPosition();
-        }
-        console.log('adding url to history', url);
-        console.log('historyUrls=', historyUrls);
-    }
+    // function addUrlToHistory(url:string){
+    //     historyUrls.push({url, scroll: 0})
+    //     while(historyUrls.length>maxHistoryUrlsCount){
+    //         historyUrls.shift()
+    //     }
+    //     // save scroll position to previous url
+    //     if(historyUrls.length>1){
+    //         historyUrls[historyUrls.length-2].scroll = DomeManipulator.getCurrentScrollPosition()
+    //     }
+    //     console.log('adding url to history', url)
+    //     console.log('historyUrls=', historyUrls)
+    // }
     function getCurrentUrl() {
-        return historyUrls.length > 0 ? historyUrls[historyUrls.length - 1] : window.location.pathname;
+        return window.location.pathname;
+        // return historyUrls.length>0?historyUrls[historyUrls.length-1]:window.location.pathname
     }
     DomeRouter.getCurrentUrl = getCurrentUrl;
-    /**
-     * get previous page url navigated by router
-     * @param previousPageIndex 0=previousPage, 1=previousPage-1, etc
-     */
-    function getPreviousPageUrl(previousPageIndex = 0) {
-        //if(historyUrls.length==0) return undefined
-        let index = historyUrls.length - 2 - previousPageIndex;
-        if (index >= 0 && index < historyUrls.length)
-            return historyUrls[index].url;
-        return undefined;
-    }
-    DomeRouter.getPreviousPageUrl = getPreviousPageUrl;
-    function reloadCurrentPage(addToHistory = false) {
-        const url = window.location.pathname;
-        if (addToHistory)
-            addUrlToHistory(url);
-        executeAsync(url, getScrollPositionForUrl(url)); // TODO: check
-    }
-    DomeRouter.reloadCurrentPage = reloadCurrentPage;
-    function resolveUrl(url = window.location.pathname, addToHistory = true) {
-        if (addToHistory)
-            addUrlToHistory(window.location.pathname);
+    // /**
+    //  * get previous page url navigated by router
+    //  * @param previousPageIndex 0=previousPage, 1=previousPage-1, etc
+    //  */
+    // export function getPreviousPageUrl(previousPageIndex:number=0):string|undefined{
+    //     //if(historyUrls.length==0) return undefined
+    //     let index = historyUrls.length-2-previousPageIndex
+    //     if(index >= 0 && index < historyUrls.length) return historyUrls[index].url
+    //     return undefined
+    // }
+    // export function reloadCurrentPage(addToHistory:boolean = false){
+    //     const url = window.location.pathname
+    //     if(addToHistory) addUrlToHistory(url)
+    //     executeAsync(url, getScrollPositionForUrl(url)) // TODO: check
+    // }
+    function resolveUrl(url = window.location.pathname) {
+        // if(addToHistory) addUrlToHistory(window.location.pathname)
         executeAsync(url, getScrollPositionForUrl(url)); // TODO: check
     }
     DomeRouter.resolveUrl = resolveUrl;

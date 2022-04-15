@@ -1,24 +1,14 @@
 export declare type RouteAction = (params: {
     [key: string]: string;
 }, url: string, scrollToPreviousPositionFunctionAsync: () => Promise<void>) => void | Promise<void>;
-interface HistoryUrl {
-    url: string;
-    scroll: number;
-}
 export declare module DomeRouter {
     let maxHistoryUrlsCount: number;
     function navigate(url: string): void;
     function goBack(): void;
     function goForward(): void;
     function changeUrl(url: string): void;
-    function getCurrentUrl(): string | HistoryUrl;
-    /**
-     * get previous page url navigated by router
-     * @param previousPageIndex 0=previousPage, 1=previousPage-1, etc
-     */
-    function getPreviousPageUrl(previousPageIndex?: number): string | undefined;
-    function reloadCurrentPage(addToHistory?: boolean): void;
-    function resolveUrl(url?: string, addToHistory?: boolean): void;
+    function getCurrentUrl(): string;
+    function resolveUrl(url?: string): void;
     function onRoute(route: string, exactMatch: boolean, action: RouteAction): void;
     function onNotFound(action: () => void): void;
     /**
@@ -33,4 +23,3 @@ export declare module DomeRouter {
      */
     function checkUrlMatchRouteAndGetParameters(url: string, route: string, exactMatch?: boolean): Object | undefined;
 }
-export {};

@@ -32,9 +32,9 @@ export module DomeRouter {
         const url = window.location.pathname
         await executeAsync(url, getScrollPositionForUrl(url) )
         
-        // await DomeManipulator.scrollToAsync({
-        //     pxFromTop: getScrollPositionForUrl(window.location.pathname)
-        // })
+        await DomeManipulator.scrollToAsync({
+            pxFromTop: getScrollPositionForUrl(window.location.pathname)
+        })
     })
 
     function getScrollPositionForUrl(url:string){
@@ -50,6 +50,7 @@ export module DomeRouter {
     }
 
     export function navigate(url:string){
+        saveScrollPositionForCurrentUrl()
         window.history.pushState(null, '', url)
         executeAsync(url, 0)
         DomeManipulator.scrollToTop()
@@ -213,7 +214,6 @@ export module DomeRouter {
     }
 
     async function executeAsync(url:string = window.location.pathname, scrollToPosition:number){
-        saveScrollPositionForUrl(url)
         //const url = window.location.pathname
         const urlSlices = getRouteSlices(url)
         // urlSlices = show, category, 345
