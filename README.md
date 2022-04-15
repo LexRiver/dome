@@ -1506,7 +1506,11 @@ Parameters:
 
 Where `RouteAction` type is:
 ```typescript
-export type RouteAction = (params:{[key:string]:string}, url:string) => void|Promise<void>
+export type RouteAction = (
+    params:{[key:string]:string}, // parameters from url
+    url:string, 
+    scrollToPreviousPositionAsync:()=>Promise<void> // this function can be called to scroll to previous page position
+    ) => void|Promise<void>
 ```
 
 example:

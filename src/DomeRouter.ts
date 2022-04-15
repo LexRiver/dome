@@ -5,7 +5,7 @@ const filename = '[DomeRouter]'
 export type RouteAction = (
     params:{[key:string]:string}, 
     url:string,
-    scrollToPreviousPositionFunctionAsync:()=>Promise<void>
+    scrollToPreviousPositionAsync:()=>Promise<void>
     ) => void|Promise<void>
 
 interface Route{

@@ -1,6 +1,6 @@
 export declare type RouteAction = (params: {
     [key: string]: string;
-}, url: string, scrollToPreviousPositionFunctionAsync: () => Promise<void>) => void | Promise<void>;
+}, url: string, scrollToPreviousPositionAsync: () => Promise<void>) => void | Promise<void>;
 export declare module DomeRouter {
     let maxHistoryUrlsCount: number;
     function navigate(url: string): void;
