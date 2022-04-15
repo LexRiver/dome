@@ -14,13 +14,13 @@ interface Route{
     action:RouteAction
 }
 
-// interface HistoryUrl{
-//     url:string
-//     scroll:number
-// }
+interface HistoryUrl{
+    url:string
+    scroll:number
+}
 
 export module DomeRouter {
-    //const historyUrls:HistoryUrl[] = []
+    const historyUrls:HistoryUrl[] = []
     const scrollPositionByUrl = new Map<string, number>()
     export let maxHistoryUrlsCount:number = 20
     const allRoutes:Route[] = []
@@ -50,10 +50,12 @@ export module DomeRouter {
     }
 
     export function navigate(url:string){
+        addUrlToHistory(getCurrentUrl())
         saveScrollPositionForCurrentUrl()
         window.history.pushState(null, '', url)
         executeAsync(url, 0)
         DomeManipulator.scrollToTop()
+        // historyUrls.push()
     }
 
     export function goBack(){
@@ -71,20 +73,20 @@ export module DomeRouter {
         // }
     }
 
-    // function addUrlToHistory(url:string){
-    //     historyUrls.push({url, scroll: 0})
-    //     while(historyUrls.length>maxHistoryUrlsCount){
-    //         historyUrls.shift()
-    //     }
+    function addUrlToHistory(url:string){
+        historyUrls.push({url, scroll: 0})
+        while(historyUrls.length>maxHistoryUrlsCount){
+            historyUrls.shift()
+        }
 
-    //     // save scroll position to previous url
-    //     if(historyUrls.length>1){
-    //         historyUrls[historyUrls.length-2].scroll = DomeManipulator.getCurrentScrollPosition()
-    //     }
+        // save scroll position to previous url
+        if(historyUrls.length>1){
+            historyUrls[historyUrls.length-2].scroll = DomeManipulator.getCurrentScrollPosition()
+        }
 
-    //     console.log('adding url to history', url)
-    //     console.log('historyUrls=', historyUrls)
-    // }
+        console.log('adding url to history', url)
+        console.log('historyUrls=', historyUrls)
+    }
 
       
 
@@ -93,16 +95,16 @@ export module DomeRouter {
         // return historyUrls.length>0?historyUrls[historyUrls.length-1]:window.location.pathname
     }
 
-    // /**
-    //  * get previous page url navigated by router
-    //  * @param previousPageIndex 0=previousPage, 1=previousPage-1, etc
-    //  */
-    // export function getPreviousPageUrl(previousPageIndex:number=0):string|undefined{
-    //     //if(historyUrls.length==0) return undefined
-    //     let index = historyUrls.length-2-previousPageIndex
-    //     if(index >= 0 && index < historyUrls.length) return historyUrls[index].url
-    //     return undefined
-    // }
+    /**
+     * get previous page url navigated by router
+     * @param previousPageIndex 0=previousPage, 1=previousPage-1, etc
+     */
+    export function getPreviousPageUrl(previousPageIndex:number=0):string|undefined{
+        //if(historyUrls.length==0) return undefined
+        let index = historyUrls.length-2-previousPageIndex
+        if(index >= 0 && index < historyUrls.length) return historyUrls[index].url
+        return undefined
+    }
 
     // export function reloadCurrentPage(addToHistory:boolean = false){
     //     const url = window.location.pathname
