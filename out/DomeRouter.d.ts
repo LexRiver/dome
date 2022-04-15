@@ -1,6 +1,6 @@
 export declare type RouteAction = (params: {
     [key: string]: string;
-}, url: string) => void | Promise<void>;
+}, url: string, scrollToPreviousPositionFunctionAsync: () => Promise<void>) => void | Promise<void>;
 interface HistoryUrl {
     url: string;
     scroll: number;

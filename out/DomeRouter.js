@@ -7,26 +7,36 @@ export var DomeRouter;
     const allRoutes = [];
     let onNotFoundAction = undefined;
     window.addEventListener('popstate', async (e) => {
+        // on go back
         //console.log(filename, 'window.popstate event', e, 'historyUrl=', historyUrls)
-        await executeAsync();
-        await DomeManipulator.scrollToAsync({
-            pxFromTop: getScrollPositionForUrl(window.location.pathname)
-        });
+        const url = window.location.pathname;
+        await executeAsync(url, getScrollPositionForUrl(url));
+        // await DomeManipulator.scrollToAsync({
+        //     pxFromTop: getScrollPositionForUrl(window.location.pathname)
+        // })
     });
     function getScrollPositionForUrl(url) {
         // well, let's find the last url? or which index? 
-        let result = 0;
-        for (let item of historyUrls) {
+        //let result = 0
+        for (let i = historyUrls.length - 1; i >= 0; i--) {
+            const item = historyUrls[i];
             if (item.url === url) {
-                result = item.scroll;
+                //result = item.scroll
+                return item.scroll;
             }
         }
-        return result;
+        return 0;
+        // for(let item of historyUrls){
+        //     if(item.url === url){
+        //         result = item.scroll        
+        //     }
+        // }
+        // return result
     }
     function navigate(url) {
         window.history.pushState(null, '', url);
         addUrlToHistory(url);
-        executeAsync();
+        executeAsync(url, 0);
         DomeManipulator.scrollToTop();
     }
     DomeRouter.navigate = navigate;
@@ -72,15 +82,16 @@ export var DomeRouter;
     }
     DomeRouter.getPreviousPageUrl = getPreviousPageUrl;
     function reloadCurrentPage(addToHistory = false) {
+        const url = window.location.pathname;
         if (addToHistory)
-            addUrlToHistory(window.location.pathname);
-        executeAsync();
+            addUrlToHistory(url);
+        executeAsync(url, getScrollPositionForUrl(url)); // TODO: check
     }
     DomeRouter.reloadCurrentPage = reloadCurrentPage;
     function resolveUrl(url = window.location.pathname, addToHistory = true) {
         if (addToHistory)
             addUrlToHistory(window.location.pathname);
-        executeAsync(url);
+        executeAsync(url, getScrollPositionForUrl(url)); // TODO: check
     }
     DomeRouter.resolveUrl = resolveUrl;
     function onRoute(route, exactMatch, action) {
@@ -177,7 +188,7 @@ export var DomeRouter;
             return [name.substring(1), value];
         }
     }
-    async function executeAsync(url = window.location.pathname) {
+    async function executeAsync(url = window.location.pathname, scrollToPosition) {
         //const url = window.location.pathname
         const urlSlices = getRouteSlices(url);
         // urlSlices = show, category, 345
@@ -216,7 +227,11 @@ export var DomeRouter;
             if (matched) {
                 countOfFoundRoutes++;
                 //console.log('DomeRouter', 'executeAsync', url, route, extractedParameters)
-                await route.action(extractedParameters, url);
+                await route.action(extractedParameters, url, async () => {
+                    await DomeManipulator.scrollToAsync({
+                        pxFromTop: scrollToPosition
+                    });
+                });
             }
         }
         if (countOfFoundRoutes == 0 && onNotFoundAction) {

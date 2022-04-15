@@ -37,13 +37,22 @@ export module DomeRouter {
 
     function getScrollPositionForUrl(url:string){
         // well, let's find the last url? or which index? 
-        let result = 0
-        for(let item of historyUrls){
+        //let result = 0
+        for(let i=historyUrls.length-1;i>=0;i--){
+            const item = historyUrls[i]
             if(item.url === url){
-                result = item.scroll        
+                //result = item.scroll
+                return item.scroll
+
             }
         }
-        return result
+        return 0
+        // for(let item of historyUrls){
+        //     if(item.url === url){
+        //         result = item.scroll        
+        //     }
+        // }
+        // return result
     }
 
     export function navigate(url:string){
