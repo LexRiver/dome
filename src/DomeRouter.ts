@@ -29,8 +29,8 @@ export module DomeRouter {
         // on go back
         console.log(filename, 'window.popstate event', e, 'historyUrls=', historyUrls)
         const url = window.location.pathname
-        addUrlToHistory(url)
         await executeAsync(url, getScrollPositionForUrl(url) )
+        addUrlToHistory(url)
         // await DomeManipulator.scrollToAsync({
         //     pxFromTop: getScrollPositionForUrl(window.location.pathname)
         // })
