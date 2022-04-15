@@ -2,7 +2,11 @@ import { DomeManipulator } from "./DomeManipulator"
 
 const filename = '[DomeRouter]'
 
-export type RouteAction = (params:{[key:string]:string}, url:string) => void|Promise<void>
+export type RouteAction = (
+    params:{[key:string]:string}, 
+    url:string,
+    scrollToPreviousPositionFunctionAsync:()=>Promise<void>
+    ) => void|Promise<void>
 
 interface Route{
     routeSlices:string[]
@@ -22,11 +26,13 @@ export module DomeRouter {
     let onNotFoundAction:(()=>void)|undefined = undefined
 
     window.addEventListener('popstate', async (e) => {
+        // on go back
         //console.log(filename, 'window.popstate event', e, 'historyUrl=', historyUrls)
-        await executeAsync()
-        await DomeManipulator.scrollToAsync({
-            pxFromTop: getScrollPositionForUrl(window.location.pathname)
-        })
+        const url = window.location.pathname
+        await executeAsync(url, getScrollPositionForUrl(url) )
+        // await DomeManipulator.scrollToAsync({
+        //     pxFromTop: getScrollPositionForUrl(window.location.pathname)
+        // })
     })
 
     function getScrollPositionForUrl(url:string){
@@ -43,7 +49,7 @@ export module DomeRouter {
     export function navigate(url:string){
         window.history.pushState(null, '', url)
         addUrlToHistory(url)
-        executeAsync()
+        executeAsync(url, 0)
         DomeManipulator.scrollToTop()
     }
 
@@ -91,13 +97,14 @@ export module DomeRouter {
     }
 
     export function reloadCurrentPage(addToHistory:boolean = false){
-        if(addToHistory) addUrlToHistory(window.location.pathname)
-        executeAsync()
+        const url = window.location.pathname
+        if(addToHistory) addUrlToHistory(url)
+        executeAsync(url, getScrollPositionForUrl(url)) // TODO: check
     }
 
     export function resolveUrl(url:string = window.location.pathname, addToHistory:boolean = true){
         if(addToHistory) addUrlToHistory(window.location.pathname)
-        executeAsync(url)
+        executeAsync(url, getScrollPositionForUrl(url)) // TODO: check
     }
 
     export function onRoute(route:string, exactMatch:boolean, action:RouteAction){
@@ -198,7 +205,7 @@ export module DomeRouter {
 
     }
 
-    async function executeAsync(url:string = window.location.pathname){
+    async function executeAsync(url:string = window.location.pathname, scrollToPosition:number){
         //const url = window.location.pathname
         const urlSlices = getRouteSlices(url)
         // urlSlices = show, category, 345
@@ -238,7 +245,11 @@ export module DomeRouter {
             if(matched){
                 countOfFoundRoutes++
                 //console.log('DomeRouter', 'executeAsync', url, route, extractedParameters)
-                await route.action(extractedParameters, url)
+                await route.action(extractedParameters, url, async () => {
+                    await DomeManipulator.scrollToAsync({
+                        pxFromTop: scrollToPosition
+                    })
+                })
             }
         }
         if(countOfFoundRoutes==0 && onNotFoundAction){
