@@ -14,51 +14,43 @@ interface Route{
     action:RouteAction
 }
 
-interface HistoryUrl{
-    url:string
-    scroll:number
-}
+// interface HistoryUrl{
+//     url:string
+//     scroll:number
+// }
 
 export module DomeRouter {
-    const historyUrls:HistoryUrl[] = []
+    //const historyUrls:HistoryUrl[] = []
+    const scrollPositionByUrl = new Map<string, number>()
     export let maxHistoryUrlsCount:number = 20
     const allRoutes:Route[] = []
     let onNotFoundAction:(()=>void)|undefined = undefined
 
     window.addEventListener('popstate', async (e) => {
-        // on go back
-        console.log(filename, 'window.popstate event', e, 'historyUrls=', historyUrls)
+        // on go back/forward
+        //console.log(filename, 'window.popstate event', e, 'historyUrls=', historyUrls)
         const url = window.location.pathname
         await executeAsync(url, getScrollPositionForUrl(url) )
-        addUrlToHistory(url)
+        
         // await DomeManipulator.scrollToAsync({
         //     pxFromTop: getScrollPositionForUrl(window.location.pathname)
         // })
     })
 
     function getScrollPositionForUrl(url:string){
-        // well, let's find the last url? or which index? 
-        //let result = 0
-        for(let i=historyUrls.length-1;i>=0;i--){
-            const item = historyUrls[i]
-            if(item.url === url){
-                //result = item.scroll
-                return item.scroll
+        return scrollPositionByUrl.get(url) ?? 0
+    }
 
-            }
-        }
-        return 0
-        // for(let item of historyUrls){
-        //     if(item.url === url){
-        //         result = item.scroll        
-        //     }
-        // }
-        // return result
+    function saveScrollPositionForUrl(url:string){
+        scrollPositionByUrl.set(url, DomeManipulator.getCurrentScrollPosition())
+    }
+
+    function saveScrollPositionForCurrentUrl(){
+        scrollPositionByUrl.set(getCurrentUrl(), DomeManipulator.getCurrentScrollPosition())
     }
 
     export function navigate(url:string){
         window.history.pushState(null, '', url)
-        addUrlToHistory(url)
         executeAsync(url, 0)
         DomeManipulator.scrollToTop()
     }
@@ -73,50 +65,52 @@ export module DomeRouter {
 
     export function changeUrl(url:string){
         window.history.replaceState(null, '', url)
-        if(historyUrls.length>0){
-            historyUrls[historyUrls.length-1].url = url
-        }
+        // if(historyUrls.length>0){
+        //     historyUrls[historyUrls.length-1].url = url
+        // }
     }
 
-    function addUrlToHistory(url:string){
-        historyUrls.push({url, scroll: 0})
-        while(historyUrls.length>maxHistoryUrlsCount){
-            historyUrls.shift()
-        }
+    // function addUrlToHistory(url:string){
+    //     historyUrls.push({url, scroll: 0})
+    //     while(historyUrls.length>maxHistoryUrlsCount){
+    //         historyUrls.shift()
+    //     }
 
-        // save scroll position to previous url
-        if(historyUrls.length>1){
-            historyUrls[historyUrls.length-2].scroll = DomeManipulator.getCurrentScrollPosition()
-        }
+    //     // save scroll position to previous url
+    //     if(historyUrls.length>1){
+    //         historyUrls[historyUrls.length-2].scroll = DomeManipulator.getCurrentScrollPosition()
+    //     }
 
-        console.log('adding url to history', url)
-        console.log('historyUrls=', historyUrls)
-    }
+    //     console.log('adding url to history', url)
+    //     console.log('historyUrls=', historyUrls)
+    // }
 
       
 
     export function getCurrentUrl(){
-        return historyUrls.length>0?historyUrls[historyUrls.length-1]:window.location.pathname
-    }
-    /**
-     * get previous page url navigated by router
-     * @param previousPageIndex 0=previousPage, 1=previousPage-1, etc
-     */
-    export function getPreviousPageUrl(previousPageIndex:number=0):string|undefined{
-        //if(historyUrls.length==0) return undefined
-        let index = historyUrls.length-2-previousPageIndex
-        if(index >= 0 && index < historyUrls.length) return historyUrls[index].url
-        return undefined
+        return window.location.pathname
+        // return historyUrls.length>0?historyUrls[historyUrls.length-1]:window.location.pathname
     }
 
-    export function reloadCurrentPage(addToHistory:boolean = false){
-        const url = window.location.pathname
-        if(addToHistory) addUrlToHistory(url)
-        executeAsync(url, getScrollPositionForUrl(url)) // TODO: check
-    }
+    // /**
+    //  * get previous page url navigated by router
+    //  * @param previousPageIndex 0=previousPage, 1=previousPage-1, etc
+    //  */
+    // export function getPreviousPageUrl(previousPageIndex:number=0):string|undefined{
+    //     //if(historyUrls.length==0) return undefined
+    //     let index = historyUrls.length-2-previousPageIndex
+    //     if(index >= 0 && index < historyUrls.length) return historyUrls[index].url
+    //     return undefined
+    // }
 
-    export function resolveUrl(url:string = window.location.pathname, addToHistory:boolean = true){
-        if(addToHistory) addUrlToHistory(window.location.pathname)
+    // export function reloadCurrentPage(addToHistory:boolean = false){
+    //     const url = window.location.pathname
+    //     if(addToHistory) addUrlToHistory(url)
+    //     executeAsync(url, getScrollPositionForUrl(url)) // TODO: check
+    // }
+
+    export function resolveUrl(url:string = window.location.pathname){
+        // if(addToHistory) addUrlToHistory(window.location.pathname)
         executeAsync(url, getScrollPositionForUrl(url)) // TODO: check
     }
 
@@ -219,6 +213,7 @@ export module DomeRouter {
     }
 
     async function executeAsync(url:string = window.location.pathname, scrollToPosition:number){
+        saveScrollPositionForUrl(url)
         //const url = window.location.pathname
         const urlSlices = getRouteSlices(url)
         // urlSlices = show, category, 345
