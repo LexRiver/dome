@@ -58,8 +58,8 @@ export var DomeRouter;
         if (historyUrls.length > 1) {
             historyUrls[historyUrls.length - 2].scroll = DomeManipulator.getCurrentScrollPosition();
         }
-        console.log('adding url to history', url);
-        console.log('historyUrls=', historyUrls);
+        // console.log('adding url to history', url)
+        // console.log('historyUrls=', historyUrls)
     }
     function getCurrentUrl() {
         return window.location.pathname;

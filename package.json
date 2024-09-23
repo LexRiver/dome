@@ -2,7 +2,7 @@
     "type": "module",
     "sideEffects": false,
     "name": "@lexriver/dome",
-    "version": "1.5.10",
+    "version": "1.5.11",
     "description": "",
     "main": "out/index.js",
     "types": "out/index.d.ts",
@@ -28,7 +28,7 @@
     },
     "dependencies": {
         "@lexriver/async": "^1.0.0",
-        "@lexriver/data-types": "^2.0.0",
+        "@lexriver/data-types": "^2.0.1",
         "@lexriver/observable": "^1.0.0",
         "svg-tag-names": "^2.0.0",
         "ts-debounce": "^2.0.1"
