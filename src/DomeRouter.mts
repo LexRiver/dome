@@ -3,9 +3,10 @@ import { DomeManipulator } from "./DomeManipulator.mjs"
 // const filename = '[DomeRouter]'
 
 export type RouteAction = (
-    params:{[key:string]:string}, 
+    params:{[key:string]:string|number}, 
     url:string,
-    scrollToPreviousPositionAsync:()=>Promise<void>
+    scrollToPreviousPositionAsync:()=>Promise<void>,
+    query:{[key:string]:string}
     ) => void|Promise<void>
 
 interface Route{
@@ -215,7 +216,20 @@ export namespace DomeRouter {
 
     }
 
+    function parseQueryString(search:string):{[key:string]:string}{
+        const query:{[key:string]:string} = {}
+        if(!search || search[0] !== '?') return query
+        const params = new URLSearchParams(search.substring(1))
+        for(const [key, value] of params.entries()){
+            query[key] = value
+        }
+        return query
+    }
+
     async function executeAsync(url:string = window.location.pathname, scrollToPosition:number){
+        const queryString = window.location.search
+        const query = parseQueryString(queryString)
+        url = url.split('?')[0]  // Strip query params
         //const url = window.location.pathname
         const urlSlices = getRouteSlices(url)
         // urlSlices = show, category, 345
@@ -259,7 +273,7 @@ export namespace DomeRouter {
                     await DomeManipulator.scrollToAsync({
                         pxFromTop: scrollToPosition
                     })
-                })
+                }, query)
             }
         }
         if(countOfFoundRoutes==0 && onNotFoundAction){
