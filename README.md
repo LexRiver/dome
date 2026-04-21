@@ -1350,7 +1350,7 @@ DomeManipulator.scrollToY({
 Use DomeRouter for navigation in single page app.
 
 ```typescript
-DomeRouter.onRoute('/about', true, async (params, url) => {
+DomeRouter.onRoute('/about', true, async (params, url, scrollTo, query) => {
     const { PageAbout } = await import('./pages/PageAbout') // dynamic import component
     DomeManipulator.replaceAllChildrenAsync(divContainer, <PageAbout />, animationHide, animationShow) // replace current page with new page
 })
@@ -1507,10 +1507,16 @@ Parameters:
 Where `RouteAction` type is:
 ```typescript
 export type RouteAction = (
-    params:{[key:string]:string}, // parameters from url
-    url:string, 
-    scrollToPreviousPositionAsync:()=>Promise<void> // this function can be called to scroll to previous page position
+    params:{[key:string]:string|number}, // parameters from url path
+    url:string, // url path without query string
+    scrollToPreviousPositionAsync:()=>Promise<void>, // this function can be called to scroll to previous page position
+    query:{[key:string]:string} // query parameters from window.location.search
     ) => void|Promise<void>
+```
+
+For example, for URL `/search?category=books&sort=price`, the `query` parameter will be:
+```typescript
+{category: 'books', sort: 'price'}
 ```
 
 example:
