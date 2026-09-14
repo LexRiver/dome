@@ -1,13 +1,28 @@
 {
     "sideEffects": false,
     "name": "@lexriver/dome",
-    "version": "2.0.2",
+    "version": "2.0.3",
     "description": "DOM manipulator",
     "type": "module",
-    "exports": "./out/src/index.mjs",
+    "types": "./out/src/index.d.ts",
+    "main": "./out/index.cjs",
+    "module": "./out/index.mjs",
+    "exports": {
+        ".": {
+            "types": "./out/src/index.d.mts",
+            "import": "./out/src/index.mjs",
+            "require": "./out/index.cjs",
+            "default": "./out/src/index.mjs"
+        }
+    },
+    "files": [
+        "out",
+        "README.md"
+    ],
     "scripts": {
         "test": "vitest",
-        "build": "rimraf out && tsc"
+        "build": "rimraf out && tsc && node scripts/build-compat.mjs",
+        "test:compat": "npm run build && npm --prefix compatibility/ts39-webpack4 install && npm --prefix compatibility/ts39-webpack4 run build"
     },
     "keywords": [
         "typescript",
@@ -24,6 +39,7 @@
     "license": "MIT",
     "devDependencies": {
         "@types/node": "^22.7.0",
+        "esbuild": "^0.21.5",
         "rimraf": "^6.0.1",
         "typescript": "^5.6.2",
         "vitest": "^2.1.1"
@@ -32,6 +48,7 @@
         "@lexriver/async": "^3.0.1",
         "@lexriver/data-types": "^3.0.5",
         "@lexriver/observable": "^3.0.0",
+        "@lexriver/type-event": "^2.0.0",
         "svg-tag-names": "^3.0.1",
         "ts-debounce": "^4.0.0"
     }

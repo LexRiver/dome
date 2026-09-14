@@ -1,0 +1,19 @@
+{
+    "name": "@lexriver/dome-ts39-webpack4-compatibility",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "typecheck": "tsc --noEmit",
+        "bundle": "node --openssl-legacy-provider node_modules/webpack/bin/webpack.js --config webpack.config.js",
+        "build": "npm run typecheck && npm run bundle"
+    },
+    "dependencies": {
+        "@lexriver/dome": "file:../.."
+    },
+    "devDependencies": {
+        "ts-loader": "8.4.0",
+        "typescript": "3.9.10",
+        "webpack": "4.47.0",
+        "webpack-cli": "3.3.12"
+    }
+}

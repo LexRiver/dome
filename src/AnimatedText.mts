@@ -1,6 +1,6 @@
 import { ObservableVariable } from "@lexriver/observable";
 import { CssClass, DomeManipulator } from "./DomeManipulator.mjs";
-import { DomeComponent } from "./index.mjs";
+import { DomeComponent } from "./DomeComponent.mjs";
 
 interface Attrs{
     textO:ObservableVariable<string>

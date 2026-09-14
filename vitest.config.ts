@@ -4,7 +4,7 @@ export default defineConfig({
     test:{
         exclude: [
             './out/**',
-            './node_modules/**'
+            '**/node_modules/**'
         ]
     }
 })

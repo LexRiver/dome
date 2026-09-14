@@ -1,7 +1,8 @@
 import { ObservableVariable } from '@lexriver/observable'
 import { Animation } from './Animation.mjs'
 import { DomeManipulator } from "./DomeManipulator.mjs"
-import { AnimatedArray, DomeComponent } from "./index.mjs"
+import { AnimatedArray } from "./AnimatedArray.mjs"
+import { DomeComponent } from "./DomeComponent.mjs"
 
 interface Attrs<T>{
     isLoadingO?:ObservableVariable<boolean>

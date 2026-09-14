@@ -1,5 +1,5 @@
 // inspiration: https://github.com/vadimdemedes/dom-chef/blob/master/index.js
-const svgTagNames = require('svg-tag-names')
+import { svgTagNames } from 'svg-tag-names'
 import { DataTypes } from '@lexriver/data-types'
 import { ObservableVariable, checkIfObservable } from '@lexriver/observable'
 import { DomeComponent } from './DomeComponent.mjs'
