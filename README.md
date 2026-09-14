@@ -1507,9 +1507,9 @@ Parameters:
 Where `RouteAction` type is:
 ```typescript
 export type RouteAction = (
-    params:{[key:string]:string|number}, // parameters from url path
-    url:string, // url path without query string
-    scrollToPreviousPositionAsync:()=>Promise<void>, // this function can be called to scroll to previous page position
+    params:{[key:string]:string}, // unannotated parameters from the URL path
+    url:string, // URL path without query string
+    scrollToPreviousPositionAsync:()=>Promise<void>, // call this to scroll to the previous page position
     query:{[key:string]:string} // query parameters from window.location.search
     ) => void|Promise<void>
 ```
@@ -1529,28 +1529,23 @@ DomeRouter.onRoute('/product/:productId', true, (params, url) => {
 })
 ```
 
-A type of parameter can be added, for example :
+For numeric parameters, use `onTypedRoute`. This opt-in API types route values as `string | number`, because TypeScript 3.9 cannot infer parameter types from route-string annotations.
+
 ```typescript
-DomeRouter.onRoute('/product/:productId<number>', true, (params, url) => {
-    // for example for '/product/456' the output will be
-    // 'productId=', 456, number
-    console.log('productId=', params.productId, typeof params.productId) 
+DomeRouter.onTypedRoute('/product/:productId<number>', true, (params, url) => {
+    // For '/product/456', productId is 456 at runtime.
+    if(typeof params.productId === 'number') {
+        console.log('productId=', params.productId)
+    }
 })
 ```
 
-A possible types are:
+The supported numeric annotations are:
 * `int` - uses `parseInt(p)` internally
 * `float` - uses `parseFloat(p)` internally
-* `number` - uses `Number(p)` intrenally
-But there is no validation for paramters, so the result of specified function will be returned.
+* `number` - uses `Number(p)` internally
 
-```typescript
-DomeRouter.onRoute('/product/:productId<int>', true, (params, url) => {
-    // for example for '/product/456' the output will be
-    // 'productId=', 456, number
-    console.log('productId=', params.productId, typeof params.productId) 
-})
-```
+There is no numeric validation, so the result of the corresponding conversion function is returned. Existing unannotated routes should continue using `onRoute`; their parameters remain strings without casts.
 
 <br/>
 

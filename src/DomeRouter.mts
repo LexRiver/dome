@@ -2,17 +2,24 @@ import { DomeManipulator } from "./DomeManipulator.mjs"
 
 // const filename = '[DomeRouter]'
 
-export type RouteAction = (
-    params:{[key:string]:string|number}, 
+export type RouteParameters = {[key:string]:string}
+export type TypedRouteParameters = {[key:string]:string|number}
+
+type RouteCallback<Parameters> = (
+    params:Parameters,
     url:string,
     scrollToPreviousPositionAsync:()=>Promise<void>,
     query:{[key:string]:string}
     ) => void|Promise<void>
 
+export type RouteAction = RouteCallback<RouteParameters>
+export type TypedRouteAction = RouteCallback<TypedRouteParameters>
+type InternalRouteAction = RouteCallback<{[key:string]:any}>
+
 interface Route{
     routeSlices:string[]
     exactMatch:boolean
-    action:RouteAction
+    action:InternalRouteAction
 }
 
 interface HistoryUrl{
@@ -118,10 +125,20 @@ export namespace DomeRouter {
         executeAsync(url, getScrollPositionForUrl(url))
     }
 
-    export function onRoute(route:string, exactMatch:boolean, action:RouteAction){
+    function addRoute(route:string, exactMatch:boolean, action:InternalRouteAction){
         if(route[0] !== '/') throw new Error('Please provide correct route. route='+route)
-        let routeSlices = getRouteSlices(route)
+        const routeSlices = getRouteSlices(route)
         allRoutes.push({routeSlices, exactMatch, action})
+    }
+
+    /** Register a route whose unannotated parameters are strings. */
+    export function onRoute(route:string, exactMatch:boolean, action:RouteAction){
+        addRoute(route, exactMatch, action)
+    }
+
+    /** Register a route using <int>, <float>, or <number> parameter annotations. */
+    export function onTypedRoute(route:string, exactMatch:boolean, action:TypedRouteAction){
+        addRoute(route, exactMatch, action)
     }
 
     function getRouteSlices(route:string){
