@@ -1,7 +1,7 @@
 {
     "sideEffects": false,
     "name": "@lexriver/dome",
-    "version": "2.0.3",
+    "version": "2.0.4",
     "description": "DOM manipulator",
     "type": "module",
     "types": "./out/src/index.d.ts",
@@ -22,7 +22,8 @@
     "scripts": {
         "test": "vitest",
         "build": "rimraf out && tsc && node scripts/build-compat.mjs",
-        "test:compat": "npm run build && npm --prefix compatibility/ts39-webpack4 install && npm --prefix compatibility/ts39-webpack4 run build"
+        "test:api-compat": "npm run build && node scripts/test-api-compat.mjs",
+        "test:compat": "npm run build && node scripts/test-api-compat.mjs && npm --prefix compatibility/ts39-webpack4 install && npm --prefix compatibility/ts39-webpack4 run build"
     },
     "keywords": [
         "typescript",
