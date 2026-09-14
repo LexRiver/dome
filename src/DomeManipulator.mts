@@ -6,6 +6,8 @@ import { Animation } from './Animation.mjs'
 
 export type CssClass = {[key:string]:boolean|ObservableVariable<boolean>} | string[] | string
 
+const replacementPromiseByElement = new WeakMap<Element, Promise<void>>()
+
 export namespace DomeManipulator {
 
     export async function hideElementAsync(element: Element, animation?:Animation) {
@@ -134,8 +136,8 @@ export namespace DomeManipulator {
             forEachChildrenOf(element, (child) => child.nodeType == Node.ELEMENT_NODE && (child as Element).classList.add(animation.cssClassName))
             //console.log('##', 'wait ms', animation.timeMs)
             await Async.waitMsAsync(animation.timeMs)
-            //console.log('##', 'removing children', element.childNodes)
-            forEachChildrenOf(element, (child) => child.remove())
+            // Take a snapshot because childNodes is live and shrinks as nodes are removed.
+            Array.from(element.childNodes).forEach(child => child.remove())
             //console.log('##', 'done')
         }
 
@@ -172,26 +174,35 @@ export namespace DomeManipulator {
     }
 
 
+    /**
+     * Replacements for the same container run in call order. A rejected replacement does
+     * not block the queue, and replacements for different containers remain independent.
+     */
     export async function replaceAllChildrenAsync(
-        containerElement: Element, 
-        childrenToInsert: Element | Element[] | DocumentFragment | Text | string | null | undefined, 
-        animationForHide?:Animation, 
+        containerElement: Element,
+        childrenToInsert: Element | Element[] | DocumentFragment | Text | string | null | undefined,
+        animationForHide?:Animation,
         animationForShow?:Animation
     ) {
-        //await removeAllChildrenAsync(containerElement, animationForHide)
+        const previousReplacement = replacementPromiseByElement.get(containerElement)
+        const replacement = (previousReplacement ?? Promise.resolve())
+            .catch(() => undefined)
+            .then(async () => {
+                if(containerElement.childNodes.length>0){
+                    await removeAllChildrenAsync(containerElement, animationForHide)
+                }
+                await appendChildrenAsync(containerElement, childrenToInsert, animationForShow)
+            })
 
-        if(containerElement.childNodes.length>0){
-            await removeAllChildrenAsync(containerElement, animationForHide) 
+        replacementPromiseByElement.set(containerElement, replacement)
+
+        try {
+            await replacement
+        } finally {
+            if(replacementPromiseByElement.get(containerElement) === replacement){
+                replacementPromiseByElement.delete(containerElement)
+            }
         }
-
-        // while(containerElement.childNodes.length>0){
-        //     await removeAllChildrenAsync(containerElement, animationForHide) // can be executed more than once! TODO: why?
-        // }
-        // if(containerElement.children.length>0) {
-        //     console.error('DomeManipulator: replaceAllChildenrAsync() failed:', 'containerElement.children.length=', containerElement.children.length, 'children=', containerElement.children, 'containerElement=', containerElement, 'animationForHide=', animationForHide)
-        //     throw new Error()
-        // }
-        await appendChildrenAsync(containerElement, childrenToInsert, animationForShow)    
     }
 
 

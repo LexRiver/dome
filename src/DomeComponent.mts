@@ -10,6 +10,8 @@ interface InternalAttrs{
 }
 export abstract class DomeComponent<Attrs>{
     public rootElement!:Element|HTMLElement
+    private updateInProgress = false
+    private updateRequested = false
     constructor(
         public attrs:Attrs & InternalAttrs, 
         public children:any
@@ -48,9 +50,28 @@ export abstract class DomeComponent<Attrs>{
         this.afterUpdate()
         
     }
-    scheduleUpdate = debounce(() => {
-        this.updateAsync()
-    }, 5)
+    private async runScheduledUpdateAsync() {
+        if(this.updateInProgress){
+            this.updateRequested = true
+            return
+        }
+
+        this.updateInProgress = true
+        try {
+            do {
+                this.updateRequested = false
+                try {
+                    await this.updateAsync()
+                } catch(error) {
+                    console.error('DomeComponent: scheduled update failed', error)
+                }
+            } while(this.updateRequested)
+        } finally {
+            this.updateInProgress = false
+        }
+    }
+
+    scheduleUpdate = debounce(() => this.runScheduledUpdateAsync(), 5)
 
     protected afterUpdate(){
 
