@@ -1,7 +1,7 @@
 {
     "sideEffects": false,
     "name": "@lexriver/dome",
-    "version": "3.0.0",
+    "version": "3.0.1",
     "description": "DOM manipulator",
     "type": "module",
     "types": "./out/src/index.d.ts",
@@ -46,10 +46,10 @@
         "vitest": "^2.1.1"
     },
     "dependencies": {
-        "@lexriver/async": "^3.0.1",
-        "@lexriver/data-types": "^3.0.5",
-        "@lexriver/observable": "^3.0.0",
-        "@lexriver/type-event": "^2.0.0",
+        "@lexriver/async": "^3.0.3",
+        "@lexriver/data-types": "^3.6.6",
+        "@lexriver/observable": "^3.1.1",
+        "@lexriver/type-event": "^3.0.4",
         "svg-tag-names": "^3.0.1",
         "ts-debounce": "^4.0.0"
     }
