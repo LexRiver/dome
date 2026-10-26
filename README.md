@@ -1415,13 +1415,13 @@ DomeRouter.maxHistoryUrlsCount = 100
 ## navigate
 
 ```typescript
-DomeRouter.navigate(url:string)
+DomeRouter.navigate(url:string):Promise<void>
 ```
 
-Navigate to specific url
+Navigate to a specific URL. The returned promise resolves after matching route actions finish and rejects if a route action fails.
 
 ```typescript
-DomeRouter.navigate('/login')
+await DomeRouter.navigate('/login')
 ```
 
 <br/>
@@ -1481,13 +1481,13 @@ Reload current page
 ## resolveUrl
 
 ```typescript
-DomeRouter.resolveUrl(url:string = window.location.pathname, addToHistory:boolean = true)
+DomeRouter.resolveUrl(url:string = window.location.pathname, addToHistory:boolean = true):Promise<void>
 ```
 
-Execute action defined for `url` in `onRoute` method
+Execute actions defined for `url` in the `onRoute` method. The returned promise resolves after matching route actions finish and rejects if a route action fails.
 
 ```typescript
-DomeRouter.resolveUrl('/about')
+await DomeRouter.resolveUrl('/about')
 ```
 
 <br/>

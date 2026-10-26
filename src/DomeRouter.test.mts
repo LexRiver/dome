@@ -1,19 +1,30 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 const originalWindow = Object.getOwnPropertyDescriptor(globalThis, 'window')
+const originalDocument = Object.getOwnPropertyDescriptor(globalThis, 'document')
+let popstateHandler:(() => void)|undefined
 let DomeRouter:typeof import('./DomeRouter.mjs').DomeRouter
 
 beforeAll(async () => {
     Object.defineProperty(globalThis, 'window', {
         configurable: true,
         value: {
-            addEventListener() {},
+            addEventListener(eventName:string, handler:() => void) {
+                if(eventName === 'popstate') popstateHandler = handler
+            },
             location: { pathname: '/', search: '' },
             history: {
                 pushState() {},
                 replaceState() {},
                 go() {}
             }
+        }
+    })
+    Object.defineProperty(globalThis, 'document', {
+        configurable: true,
+        value: {
+            documentElement: { scrollTop: 0 },
+            body: { scrollTop: 0 }
         }
     })
     DomeRouter = (await import('./DomeRouter.mjs')).DomeRouter
@@ -24,6 +35,11 @@ afterAll(() => {
         Object.defineProperty(globalThis, 'window', originalWindow)
     } else {
         delete (globalThis as { window?:unknown }).window
+    }
+    if(originalDocument){
+        Object.defineProperty(globalThis, 'document', originalDocument)
+    } else {
+        delete (globalThis as { document?:unknown }).document
     }
 })
 
@@ -53,19 +69,49 @@ describe('DomeRouter navigation generations', () => {
             latestRouteRan = true
         })
 
-        DomeRouter.resolveUrl('/generation-slow', false)
+        const staleNavigation = DomeRouter.resolveUrl('/generation-slow', false)
         await Promise.resolve()
-        DomeRouter.resolveUrl('/generation-latest', false)
-        await Promise.resolve()
+        await DomeRouter.resolveUrl('/generation-latest', false)
 
         expect(latestRouteRan).toBe(true)
         expect(staleSignal?.aborted).toBe(true)
 
         slowRoute.resolve()
+        await staleNavigation
+
+        expect(staleFollowUpRan).toBe(false)
+    })
+})
+
+describe('DomeRouter navigation errors', () => {
+    it('returns rejecting promises from resolveUrl and navigate', async () => {
+        DomeRouter.onRoute('/reject-resolve', true, async () => {
+            throw new Error('resolve failed')
+        })
+        DomeRouter.onRoute('/reject-navigate', true, async () => {
+            throw new Error('navigate failed')
+        })
+
+        await expect(DomeRouter.resolveUrl('/reject-resolve', false)).rejects.toThrow('resolve failed')
+        await expect(DomeRouter.navigate('/reject-navigate')).rejects.toThrow('navigate failed')
+    })
+
+    it('handles and reports route rejection from popstate', async () => {
+        const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+        DomeRouter.onRoute('/reject-popstate', true, async () => {
+            throw new Error('popstate failed')
+        })
+        window.location.pathname = '/reject-popstate'
+
+        popstateHandler?.()
         await Promise.resolve()
         await Promise.resolve()
 
-        expect(staleFollowUpRan).toBe(false)
+        expect(consoleError).toHaveBeenCalledWith(
+            'DomeRouter popstate navigation failed',
+            expect.objectContaining({ message: 'popstate failed' })
+        )
+        consoleError.mockRestore()
     })
 })
 

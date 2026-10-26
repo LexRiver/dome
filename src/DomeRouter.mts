@@ -36,16 +36,22 @@ export namespace DomeRouter {
     let onNotFoundAction:(()=>void)|undefined = undefined
     let activeNavigationController:AbortController|undefined
 
-    window.addEventListener('popstate', async (e) => {
-        // on go back/forward
-        //console.log(filename, 'window.popstate event', e, 'historyUrls=', historyUrls)
-        const url = window.location.pathname
-        await executeAsync(url, getScrollPositionForUrl(url) )
-        
-        await DomeManipulator.scrollToAsync({
-            pxFromTop: getScrollPositionForUrl(window.location.pathname)
-        })
+    window.addEventListener('popstate', () => {
+        void handlePopStateAsync()
     })
+
+    async function handlePopStateAsync(){
+        try {
+            const url = window.location.pathname
+            await executeAsync(url, getScrollPositionForUrl(url) )
+
+            await DomeManipulator.scrollToAsync({
+                pxFromTop: getScrollPositionForUrl(window.location.pathname)
+            })
+        } catch(error){
+            console.error('DomeRouter popstate navigation failed', error)
+        }
+    }
 
     function getScrollPositionForUrl(url:string){
         return scrollPositionByUrl.get(url) ?? 0
@@ -59,12 +65,13 @@ export namespace DomeRouter {
         scrollPositionByUrl.set(getCurrentUrl(), DomeManipulator.getCurrentScrollPosition())
     }
 
-    export function navigate(url:string){
+    export function navigate(url:string):Promise<void>{
         addUrlToHistory(getCurrentUrl())
         saveScrollPositionForCurrentUrl()
         window.history.pushState(null, '', url)
-        executeAsync(url, 0)
+        const routeExecution = executeAsync(url, 0)
         DomeManipulator.scrollToTop()
+        return routeExecution
         // historyUrls.push()
     }
 
@@ -122,9 +129,9 @@ export namespace DomeRouter {
     //     executeAsync(url, getScrollPositionForUrl(url)) // TODO: check
     // }
 
-    export function resolveUrl(url:string = window.location.pathname, addToHistory = true){
+    export function resolveUrl(url:string = window.location.pathname, addToHistory = true):Promise<void>{
         if(addToHistory) addUrlToHistory(window.location.pathname)
-        executeAsync(url, getScrollPositionForUrl(url))
+        return executeAsync(url, getScrollPositionForUrl(url))
     }
 
     function addRoute(route:string, exactMatch:boolean, action:InternalRouteAction){
