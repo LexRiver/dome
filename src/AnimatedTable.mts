@@ -109,7 +109,7 @@ export class AnimatedTable<T> extends DomeComponent<Attrs<T>>{
                 }
                 await DomeManipulator.unhideElementAsync(this.refTable, this.attrs.animationShowTable)
 
-                this.animatedArray.update(items, this.refTableBody)
+                await this.animatedArray.update(items, this.refTableBody)
             }
         } catch(x){
             console.error('AnimatedTable update failed', x)

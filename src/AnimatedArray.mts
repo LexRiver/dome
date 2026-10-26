@@ -9,6 +9,7 @@ interface KeyToElementPair{
 
 export class AnimatedArray<T>{
     arrayOfKeyToElement:KeyToElementPair[] = []
+    private updatePromise:Promise<void> = Promise.resolve()
 
     constructor(protected params:{
         parentElement?:HTMLElement,
@@ -21,7 +22,9 @@ export class AnimatedArray<T>{
         emptyList?:HTMLElement
     }){
         if(params.array && params.parentElement){
-            this.update(params.array)
+            void this.update(params.array).catch(error => {
+                console.error('AnimatedArray initial update failed', error)
+            })
         }
     }
 
@@ -29,45 +32,64 @@ export class AnimatedArray<T>{
         return this.arrayOfKeyToElement.length
     }
 
-    update(array:T[], parentElement?:HTMLElement|Element){
-        parentElement = parentElement || this.params.parentElement
-        if(!parentElement){
+    update(array:T[], parentElement?:HTMLElement|Element):Promise<void>{
+        const targetParent = parentElement || this.params.parentElement
+        const nextArray = [...array]
+        if(!targetParent){
             console.warn('AnimatedArray unable to update, no parentElement')
-            return
+            return Promise.resolve()
         }
 
+        const update = this.updatePromise
+            .catch(() => undefined)
+            .then(() => this.performUpdateAsync(nextArray, targetParent))
+        this.updatePromise = update
+        return update
+    }
+
+    private async performUpdateAsync(array:T[], parentElement:HTMLElement|Element):Promise<void>{
         if(array.length == 0 && this.params.emptyList){
-            DomeManipulator.replaceAllChildrenAsync(parentElement, this.params.emptyList)    
+            await DomeManipulator.replaceAllChildrenAsync(
+                parentElement,
+                this.params.emptyList,
+                this.params.animationHide
+            )
+            this.arrayOfKeyToElement = []
             return
         }
 
         if(array.length > 0 && this.params.emptyList){
-            DomeManipulator.removeElementAsync(this.params.emptyList, this.params.animationHide)
+            await DomeManipulator.removeElementAsync(this.params.emptyList, this.params.animationHide)
         }
 
-        //let arrayOfKeyToElement:KeyToElementPair[] = []
-        let newArrayOfKeys = array.map((item:T) => this.params.getKey(item))
-        let oldArrayOfKeys = this.arrayOfKeyToElement.map(x => x.key)
+        const operations:Array<() => Promise<void>> = []
+        const newArrayOfKeys = array.map((item:T) => this.params.getKey(item))
+        const oldArrayOfKeys = this.arrayOfKeyToElement.map(x => x.key)
         LongestCommonSubsequence.getPatchOrdered({
             oldArray: oldArrayOfKeys,
             newArray: newArrayOfKeys,
             onAdd:(index:number, key:string) => {
-                if(!parentElement) throw new Error('no parent element') //TODO: remove this
-                let itemIndex = newArrayOfKeys.indexOf(key)
-                if(itemIndex == -1) throw new Error('no itemIndex') //TODO: remove this
-                let item = array[itemIndex]
-                let element = this.params.getHtmlElement(item)
-                this.arrayOfKeyToElement.splice(index,0,{key, element})
-                DomeManipulator.insertByIndexAsync(element, index, parentElement, this.params.animationShow)
-                //this.insertNewElementWithAnimation(element, index, parentElement)
-
+                const itemIndex = newArrayOfKeys.indexOf(key)
+                if(itemIndex == -1) throw new Error('no itemIndex')
+                const item = array[itemIndex]
+                const element = this.params.getHtmlElement(item)
+                this.arrayOfKeyToElement.splice(index, 0, {key, element})
+                operations.push(() => DomeManipulator.insertByIndexAsync(
+                    element,
+                    index,
+                    parentElement,
+                    this.params.animationShow
+                ))
             },
-            onRemove: (index:number, key:string) => {
-                DomeManipulator.removeElementAsync(this.arrayOfKeyToElement[index].element, this.params.animationHide)
-                this.arrayOfKeyToElement.splice(index,1)
+            onRemove: (index:number) => {
+                const [{ element }] = this.arrayOfKeyToElement.splice(index, 1)
+                operations.push(() => DomeManipulator.removeElementAsync(element, this.params.animationHide))
             }
         })
 
+        for(const operation of operations){
+            await operation()
+        }
     }
 
 

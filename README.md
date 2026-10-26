@@ -1596,7 +1596,7 @@ setTimeout(() => {
 
 # Animated Array
 
-`AnimatedArray` class can be used to display list of items, that could be dynamically changed / added / removed with animation.
+`AnimatedArray` class can be used to display list of items that can be dynamically changed, added, or removed with animation. `update(...): Promise<void>` serializes updates and resolves after all DOM operations and animations complete.
 
 ```tsx
 interface Attrs{
@@ -1619,16 +1619,16 @@ export class AnimatedListTest extends DomeComponent<Attrs>{
         return <div></div> // container to assign this.rootElement
     }
 
-    afterRender(){
+    async afterRender(){
         let x = 200
-        
+
         setInterval(() => { // dynamically update list every 2 seconds
              this.currentArray.push(x++)
              this.currentArray.splice(2,1)
-             this.animatedArray.update((this.currentArray), this.rootElement)
+             void this.animatedArray.update(this.currentArray, this.rootElement).catch(console.error)
         }, 2000)
-                
-        this.animatedArray.update(this.currentArray, this.rootElement)
+
+        await this.animatedArray.update(this.currentArray, this.rootElement)
     }
 }
 ```
