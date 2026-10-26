@@ -124,13 +124,14 @@ export namespace DomeManipulator {
             }
             //return
         }  else {
-            //console.log('##', 'assign remove animation for each children', element.childNodes)
-            forEachChildrenOf(element, (child) => child.nodeType == Node.ELEMENT_NODE && (child as Element).classList.add(animation.cssClassName))
-            //console.log('##', 'wait ms', animation.timeMs)
+            const childrenToRemove = Array.from(element.childNodes)
+            childrenToRemove.forEach(child => {
+                if(child.nodeType == Node.ELEMENT_NODE){
+                    (child as Element).classList.add(animation.cssClassName)
+                }
+            })
             await Async.waitMsAsync(animation.timeMs)
-            // Take a snapshot because childNodes is live and shrinks as nodes are removed.
-            Array.from(element.childNodes).forEach(child => child.remove())
-            //console.log('##', 'done')
+            childrenToRemove.forEach(child => child.remove())
         }
 
         // if(element.children.length>0) {

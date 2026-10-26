@@ -67,6 +67,26 @@ afterAll(() => {
     }
 })
 
+describe('DomeManipulator.removeAllChildrenAsync', () => {
+    it('does not remove children added during the removal animation', async () => {
+        const parent = new FakeElement()
+        const original = new FakeElement()
+        const addedDuringAnimation = new FakeElement()
+        parent.appendChild(original)
+
+        const removal = DomeManipulator.removeAllChildrenAsync(
+            asElement(parent),
+            { cssClassName: 'hide', timeMs: 10 }
+        )
+        await new Promise<void>(resolve => setTimeout(resolve, 1))
+        parent.appendChild(addedDuringAnimation)
+        await removal
+
+        expect(parent.childNodes).toEqual([addedDuringAnimation])
+        expect(original.parentNode).toBe(null)
+    })
+})
+
 describe('DomeManipulator.insertByIndexAsync', () => {
     it('inserts index zero before the existing first child', async () => {
         const parent = new FakeElement()
