@@ -27,6 +27,48 @@ afterAll(() => {
     }
 })
 
+function deferred() {
+    let resolve!:() => void
+    const promise = new Promise<void>(resolvePromise => {
+        resolve = resolvePromise
+    })
+    return { promise, resolve }
+}
+
+describe('DomeRouter navigation generations', () => {
+    it('aborts an older route and prevents its remaining handlers from running', async () => {
+        const slowRoute = deferred()
+        let staleSignal:AbortSignal|undefined
+        let staleFollowUpRan = false
+        let latestRouteRan = false
+
+        DomeRouter.onRoute('/generation-slow', true, async (_params, _url, _scroll, _query, signal) => {
+            staleSignal = signal
+            await slowRoute.promise
+        })
+        DomeRouter.onRoute('/generation-slow', true, () => {
+            staleFollowUpRan = true
+        })
+        DomeRouter.onRoute('/generation-latest', true, () => {
+            latestRouteRan = true
+        })
+
+        DomeRouter.resolveUrl('/generation-slow', false)
+        await Promise.resolve()
+        DomeRouter.resolveUrl('/generation-latest', false)
+        await Promise.resolve()
+
+        expect(latestRouteRan).toBe(true)
+        expect(staleSignal?.aborted).toBe(true)
+
+        slowRoute.resolve()
+        await Promise.resolve()
+        await Promise.resolve()
+
+        expect(staleFollowUpRan).toBe(false)
+    })
+})
+
 describe('DomeRouter route parameter compatibility', () => {
     it('keeps ordinary route parameters as strings', () => {
         const params = DomeRouter.checkUrlMatchRouteAndGetParameters(

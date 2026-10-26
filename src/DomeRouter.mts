@@ -9,7 +9,8 @@ type RouteCallback<Parameters> = (
     params:Parameters,
     url:string,
     scrollToPreviousPositionAsync:()=>Promise<void>,
-    query:{[key:string]:string}
+    query:{[key:string]:string},
+    signal:AbortSignal
     ) => void|Promise<void>
 
 export type RouteAction = RouteCallback<RouteParameters>
@@ -33,6 +34,7 @@ export namespace DomeRouter {
     export let maxHistoryUrlsCount:number = 20
     const allRoutes:Route[] = []
     let onNotFoundAction:(()=>void)|undefined = undefined
+    let activeNavigationController:AbortController|undefined
 
     window.addEventListener('popstate', async (e) => {
         // on go back/forward
@@ -244,6 +246,11 @@ export namespace DomeRouter {
     }
 
     async function executeAsync(url:string = window.location.pathname, scrollToPosition:number){
+        activeNavigationController?.abort()
+        const navigationController = new AbortController()
+        activeNavigationController = navigationController
+        const { signal } = navigationController
+
         const queryString = window.location.search
         const query = parseQueryString(queryString)
         url = url.split('?')[0]  // Strip query params
@@ -252,6 +259,7 @@ export namespace DomeRouter {
         // urlSlices = show, category, 345
         let countOfFoundRoutes = 0
         for(let route of allRoutes){
+            if(signal.aborted) return
             //console.info('\t route=', route.routeSlices, route.exactMatch)
             // route.routeSlices = show, category, :categoryId
             if(route.exactMatch && route.routeSlices.length != urlSlices.length) continue
@@ -287,13 +295,15 @@ export namespace DomeRouter {
                 countOfFoundRoutes++
                 //console.log('DomeRouter', 'executeAsync', url, route, extractedParameters)
                 await route.action(extractedParameters, url, async () => {
+                    if(signal.aborted) return
                     await DomeManipulator.scrollToAsync({
                         pxFromTop: scrollToPosition
                     })
-                }, query)
+                }, query, signal)
+                if(signal.aborted) return
             }
         }
-        if(countOfFoundRoutes==0 && onNotFoundAction){
+        if(!signal.aborted && countOfFoundRoutes==0 && onNotFoundAction){
             //console.log('DomeRouter', 'onNotFoundAction()')
             onNotFoundAction()
         }
