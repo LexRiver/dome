@@ -7,15 +7,19 @@ import { Animation } from './Animation.mjs'
 export type CssClass = {[key:string]:boolean|ObservableVariable<boolean>} | string[] | string
 
 const replacementPromiseByElement = new WeakMap<Element, Promise<void>>()
+const visibilityGenerationByElement = new WeakMap<Element, number>()
 
 export namespace DomeManipulator {
 
     export async function hideElementAsync(element: Element, animation?:Animation) {
         if(!element) throw new Error('hideElementAsync failed, no element')
+        const generation = (visibilityGenerationByElement.get(element) ?? 0) + 1
+        visibilityGenerationByElement.set(element, generation)
         if((element as HTMLElement).hidden) return
         if(animation){
             await addCssClassAsync(element, animation.cssClassName, animation.timeMs)
         }
+        if(visibilityGenerationByElement.get(element) !== generation) return
         (element as HTMLElement).style.display = 'none'; //TODO: remove this?
         (element as HTMLElement).hidden = true
 
@@ -23,6 +27,8 @@ export namespace DomeManipulator {
 
     export async function unhideElementAsync(element: Element, animation?:Animation) {
         if(!element) throw new Error('unhideElementAsync failed, no element')
+        const generation = (visibilityGenerationByElement.get(element) ?? 0) + 1
+        visibilityGenerationByElement.set(element, generation)
         if(!(element as HTMLElement).hidden) return
         (element as HTMLElement).style.display = ''; //TODO: remove this?
         (element as HTMLElement).hidden = false

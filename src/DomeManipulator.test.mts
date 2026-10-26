@@ -67,6 +67,23 @@ afterAll(() => {
     }
 })
 
+describe('DomeManipulator visibility operations', () => {
+    it('does not let a stale animated hide win over a newer unhide', async () => {
+        const element = new FakeElement()
+
+        const hide = DomeManipulator.hideElementAsync(
+            asElement(element),
+            { cssClassName: 'hide', timeMs: 10 }
+        )
+        await new Promise<void>(resolve => setTimeout(resolve, 1))
+        await DomeManipulator.unhideElementAsync(asElement(element))
+        await hide
+
+        expect(element.hidden).toBe(false)
+        expect(element.style.display).toBe('')
+    })
+})
+
 describe('DomeManipulator.removeAllChildrenAsync', () => {
     it('does not remove children added during the removal animation', async () => {
         const parent = new FakeElement()
