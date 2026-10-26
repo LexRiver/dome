@@ -22,7 +22,7 @@ export abstract class DomeComponent<Attrs>{
     //abstract render(attrs:Attrs, children:any):HTMLElement
     protected init():void{}
     protected abstract render():HTMLElement
-    protected afterRender():void{
+    protected afterRender():void|Promise<void>{
         //console.log('afterRender(), el=', this.el)
     }
     // protected onMount(){

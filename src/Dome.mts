@@ -153,7 +153,9 @@ const build = (tagName, attrs, children:DocumentFragment) => {
 
 
                 //requestAnimationFrame(() => {
-                    instance['afterRender']()
+                    void Promise.resolve(instance['afterRender']()).catch(error => {
+                        console.error('DomeComponent afterRender failed', error)
+                    })
                 //})
 
                 return instance.rootElement
