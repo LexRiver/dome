@@ -115,6 +115,16 @@ describe('DomeRouter navigation errors', () => {
     })
 })
 
+describe('DomeRouter history', () => {
+    it('returns the latest page stored before navigation', async () => {
+        window.location.pathname = '/latest-prior-page'
+
+        await DomeRouter.resolveUrl('/history-destination', true)
+
+        expect(DomeRouter.getPreviousPageUrl()).toBe('/latest-prior-page')
+    })
+})
+
 describe('DomeRouter route parameter compatibility', () => {
     it('keeps ordinary route parameters as strings', () => {
         const params = DomeRouter.checkUrlMatchRouteAndGetParameters(

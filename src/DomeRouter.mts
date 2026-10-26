@@ -118,7 +118,7 @@ export namespace DomeRouter {
      */
     export function getPreviousPageUrl(previousPageIndex:number=0):string|undefined{
         //if(historyUrls.length==0) return undefined
-        let index = historyUrls.length-2-previousPageIndex
+        let index = historyUrls.length-1-previousPageIndex
         if(index >= 0 && index < historyUrls.length) return historyUrls[index].url
         return undefined
     }
