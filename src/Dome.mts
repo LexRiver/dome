@@ -18,6 +18,52 @@ interface OnEventObject{
 
 //const mountFunctionByNode = new Map<Node, (ref:any)=>void>()
 
+type ObservableEvent = {
+    subscribe:(action:(...params:any[])=>any)=>void
+    unsubscribe:(action:(...params:any[])=>any)=>void
+}
+
+function subscribeForElementLifetime(
+    element:Element,
+    event:ObservableEvent,
+    action:(...params:any[])=>any
+){
+    let mounted = DomeManipulator.isInDom(element)
+    let disposed = false
+    let observer:MutationObserver|undefined
+    let mountCheckTimer:ReturnType<typeof setTimeout>|undefined
+
+    const unsubscribe = () => {
+        if(disposed) return
+        disposed = true
+        event.unsubscribe(wrappedAction)
+        observer?.disconnect()
+        if(mountCheckTimer !== undefined) clearTimeout(mountCheckTimer)
+    }
+    const checkElementLifetime = () => {
+        if(DomeManipulator.isInDom(element)){
+            mounted = true
+        } else if(mounted){
+            unsubscribe()
+        }
+    }
+    const wrappedAction = (...params:any[]) => {
+        checkElementLifetime()
+        if(disposed) return {unsubscribe:true}
+        return action(...params)
+    }
+
+    event.subscribe(wrappedAction)
+    if(typeof MutationObserver === 'function'){
+        observer = new MutationObserver(checkElementLifetime)
+        observer.observe(document.documentElement || document.body, {childList:true, subtree:true})
+    }
+    mountCheckTimer = setTimeout(() => {
+        checkElementLifetime()
+        if(!mounted) unsubscribe()
+    }, 0)
+}
+
 // https://github.com/jonschlinkert/arr-flatten/blob/master/index.js
 function flattenArray(arr:any[], res:any[] = []){
     var i = 0, cur;
@@ -143,10 +189,11 @@ const build = (tagName, attrs, children:DocumentFragment) => {
                 //#region subscribe to observable attribute
                 for(let attribute of Object.values(attrs)){
                     if(checkIfObservable(attribute)){
-                        attribute.eventOnChange.subscribe(() => {
-                            //this.update()
-                            instance.scheduleUpdate()
-                        })
+                        subscribeForElementLifetime(
+                            instance.rootElement,
+                            attribute.eventOnChange,
+                            () => instance.scheduleUpdate()
+                        )
                     }
                 }
                 //#endregion
@@ -218,17 +265,13 @@ const build = (tagName, attrs, children:DocumentFragment) => {
                     throw new Error('Please provide Observable<boolean> as argument for visibleIf')
                 }
                 let obs = value as ObservableVariable<boolean>
-                obs.eventOnChange.subscribe((isVisible) => {
-                    if(isVisible){
-                        DomeManipulator.unhideElementAsync(el)
-                    } else {
-                        DomeManipulator.hideElementAsync(el)
-                    }
+                const setVisibilityAsync = (isVisible:boolean) => isVisible
+                    ? DomeManipulator.unhideElementAsync(el)
+                    : DomeManipulator.hideElementAsync(el)
+                subscribeForElementLifetime(el, obs.eventOnChange, setVisibilityAsync)
+                void setVisibilityAsync(obs.get()).catch(error => {
+                    console.error('Dome visibleIf update failed', error)
                 })
-
-                setTimeout(() => { //TODO: hack to trigger event on mount to DOM
-                    obs.eventOnChange.triggerAsync(obs.get())
-                }, 1)
 
             } else if (name.indexOf('on') === 0 && value) {
                 const eventName = name.slice(2).toLowerCase()
@@ -282,9 +325,7 @@ function assignDynamicCssClasses(name: string, value: {[key:string]:boolean|Obse
 
         } else if (checkIfObservable(v)) {
             let o = v as ObservableVariable<boolean>
-            o.eventOnChange.subscribe((showThiCssClass) => {
-                if(!DomeManipulator.isInDom(element)) return {unsubscribe:true} //TODO: test it
-                // reassign whole attribute
+            subscribeForElementLifetime(element, o.eventOnChange, () => {
                 DomeManipulator.setCssClasses(element, value)
             })
             if (o.get()) {
