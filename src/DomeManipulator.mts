@@ -60,16 +60,8 @@ export namespace DomeManipulator {
     }
 
     export async function insertByIndexAsync(elementToInsert: Element, index: number, parentElement: Element | DocumentFragment, animation?:Animation) {
-        if (index == 0) {
-            parentElement.appendChild(elementToInsert)
-            if(animation){
-                await addCssClassAsync(elementToInsert, animation.cssClassName, animation.timeMs)
-            }
-            return
-        }
-
-        await insertAfterAsync(elementToInsert, parentElement.children[index], parentElement, animation)
-        
+        const referenceElement = parentElement.children[index] ?? null
+        await insertBeforeAsync(elementToInsert, referenceElement, parentElement, animation)
     }
 
 
