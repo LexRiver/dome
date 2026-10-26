@@ -67,6 +67,22 @@ afterAll(() => {
     }
 })
 
+describe('DomeManipulator.addCssClassAsync', () => {
+    it('does not let an older timer remove a class added by a newer call', async () => {
+        const element = new FakeElement()
+
+        const olderAdd = DomeManipulator.addCssClassAsync(asElement(element), 'active', 10)
+        await new Promise<void>(resolve => setTimeout(resolve, 1))
+        const newerAdd = DomeManipulator.addCssClassAsync(asElement(element), 'active', 20)
+
+        await olderAdd
+        expect(element.classList.values.has('active')).toBe(true)
+
+        await newerAdd
+        expect(element.classList.values.has('active')).toBe(false)
+    })
+})
+
 describe('DomeManipulator visibility operations', () => {
     it('does not let a stale animated hide win over a newer unhide', async () => {
         const element = new FakeElement()

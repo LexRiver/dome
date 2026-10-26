@@ -8,6 +8,7 @@ export type CssClass = {[key:string]:boolean|ObservableVariable<boolean>} | stri
 
 const replacementPromiseByElement = new WeakMap<Element, Promise<void>>()
 const visibilityGenerationByElement = new WeakMap<Element, number>()
+const cssClassGenerationByElement = new WeakMap<Element, Map<string, number>>()
 
 export namespace DomeManipulator {
 
@@ -218,12 +219,33 @@ export namespace DomeManipulator {
         return !(rect.bottom < 0 || rect.top - viewHeight >= 0)
     }
 
+    function nextCssClassGeneration(element:Element, cssClassName:string):number{
+        let generationByClass = cssClassGenerationByElement.get(element)
+        if(!generationByClass){
+            generationByClass = new Map<string, number>()
+            cssClassGenerationByElement.set(element, generationByClass)
+        }
+        const generation = (generationByClass.get(cssClassName) ?? 0) + 1
+        generationByClass.set(cssClassName, generation)
+        return generation
+    }
+
+    function invalidateAllCssClassGenerations(element:Element){
+        const generationByClass = cssClassGenerationByElement.get(element)
+        generationByClass?.forEach((generation, cssClassName) => {
+            generationByClass.set(cssClassName, generation + 1)
+        })
+    }
+
     export async function addCssClassAsync(element: Element, cssClassName: string, removeAfterMs?:number) {
         if(element.nodeType !== Node.ELEMENT_NODE) return
+        const generation = nextCssClassGeneration(element, cssClassName)
         element.classList.add(cssClassName)
         if(removeAfterMs && removeAfterMs>0){
             await Async.waitMsAsync(removeAfterMs)
-            element.classList.remove(cssClassName)
+            if(cssClassGenerationByElement.get(element)?.get(cssClassName) === generation){
+                element.classList.remove(cssClassName)
+            }
         }
         
     }
@@ -233,12 +255,13 @@ export namespace DomeManipulator {
     }
 
     export function removeCssClass(element: Element, cssClassName: string) {
+        nextCssClassGeneration(element, cssClassName)
         element.classList.remove(cssClassName)
     }
 
     export function removeCssClasses(element: Element, cssClassNames: string[]) {
         for (let cssClassName of cssClassNames) {
-            element.classList.remove(cssClassName)
+            removeCssClass(element, cssClassName)
         }
 
 
@@ -257,6 +280,7 @@ export namespace DomeManipulator {
     export function setCssClasses(element: Element, value: CssClass) {
 
         if (!value) return // skip empty
+        invalidateAllCssClassGenerations(element)
         if (DataTypes.isArray(value)) {
             //console.log('setCssClasses', 'data is array', value)
             setAttribute(element, 'class', (value as string[]).join(' '))
