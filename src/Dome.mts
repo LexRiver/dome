@@ -24,11 +24,12 @@ type ObservableEvent = {
 }
 
 function subscribeForElementLifetime(
-    element:Element,
+    element:Element | (() => Element),
     event:ObservableEvent,
     action:(...params:any[])=>any
 ){
-    let mounted = DomeManipulator.isInDom(element)
+    const getElement = typeof element === 'function' ? element : () => element
+    let mounted = DomeManipulator.isInDom(getElement())
     let disposed = false
     let observer:MutationObserver|undefined
     let mountCheckTimer:ReturnType<typeof setTimeout>|undefined
@@ -41,7 +42,7 @@ function subscribeForElementLifetime(
         if(mountCheckTimer !== undefined) clearTimeout(mountCheckTimer)
     }
     const checkElementLifetime = () => {
-        if(DomeManipulator.isInDom(element)){
+        if(DomeManipulator.isInDom(getElement())){
             mounted = true
         } else if(mounted){
             unsubscribe()
@@ -190,7 +191,7 @@ const build = (tagName, attrs, children:DocumentFragment) => {
                 for(let attribute of Object.values(attrs)){
                     if(checkIfObservable(attribute)){
                         subscribeForElementLifetime(
-                            instance.rootElement,
+                            () => instance.rootElement,
                             attribute.eventOnChange,
                             () => instance.scheduleUpdate()
                         )

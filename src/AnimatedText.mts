@@ -22,7 +22,15 @@ export class AnimatedText extends DomeComponent<Attrs>{
     async updateAsync(){
         if(!this.rootElement) return
         try {
-            this.rootElement = await DomeManipulator.replaceAsync(this.rootElement, this.render(), this.attrs.onHideAnimation, this.attrs.onShowAnimation)
+            // Observable subscriptions follow this root's lifetime, so keep it mounted.
+            const root = this.rootElement
+            if(this.attrs.onHideAnimation){
+                await DomeManipulator.addCssClassAsync(root, this.attrs.onHideAnimation.cssClassName, this.attrs.onHideAnimation.timeMs)
+            }
+            root.textContent = this.attrs.textO.get()
+            if(this.attrs.onShowAnimation){
+                await DomeManipulator.addCssClassAsync(root, this.attrs.onShowAnimation.cssClassName, this.attrs.onShowAnimation.timeMs)
+            }
         } catch(x){
             console.error('AnimatedText update failed', x)
         }

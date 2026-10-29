@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 class FakeNode {
+    static readonly ELEMENT_NODE = 1
     parentNode:FakeNode|null = null
     readonly childNodes:FakeNode[] = []
 
@@ -9,6 +10,20 @@ class FakeNode {
         child.parentNode = this
         this.childNodes.push(child)
         return child
+    }
+
+    textContent = ''
+
+    append(text:string){
+        this.textContent += text
+    }
+
+    replaceChild(child:FakeNode, oldChild:FakeNode){
+        const index = this.childNodes.indexOf(oldChild)
+        oldChild.parentNode = null
+        child.parentNode = this
+        this.childNodes[index] = child
+        return oldChild
     }
 
     contains(node:FakeNode):boolean {
@@ -107,6 +122,96 @@ afterAll(() => {
 })
 
 describe('Dome component lifecycle', () => {
+    it.each([false, true])('keeps AnimatedText subscribed across repeated updates (animations: %s)', async animations => {
+        vi.useFakeTimers()
+        try {
+            const [{ h }, { AnimatedText }, { ObservableVariable }] = await Promise.all([
+                import('./Dome.mjs'),
+                import('./AnimatedText.mjs'),
+                import('@lexriver/observable')
+            ])
+            const textO = new ObservableVariable('initial')
+            const initialSubscriberCount = textO.eventOnChange.countOfSubscribers
+            const root = h(AnimatedText, {
+                textO,
+                onHideAnimation: animations ? { cssClassName: 'hide', timeMs: 20 } : undefined,
+                onShowAnimation: animations ? { cssClassName: 'show', timeMs: 20 } : undefined
+            }) as unknown as FakeElement
+            body.appendChild(root)
+            await vi.runAllTimersAsync()
+
+            for(const text of ['first', 'second', 'third']){
+                textO.set(text)
+                await vi.advanceTimersByTimeAsync(5)
+                if(animations){
+                    expect(root.classList.values.has('hide')).toBe(true)
+                    await vi.advanceTimersByTimeAsync(20)
+                    expect(root.textContent).toBe(text)
+                    expect(root.classList.values.has('show')).toBe(true)
+                }
+                await vi.runAllTimersAsync()
+                mutationObservers.forEach(observer => observer.trigger())
+                expect(body.childNodes).toContain(root)
+                expect(root.textContent).toBe(text)
+                expect(root.classList.values.size).toBe(0)
+                expect(textO.eventOnChange.countOfSubscribers).toBe(initialSubscriberCount + 1)
+            }
+
+            root.remove()
+            mutationObservers.forEach(observer => observer.trigger())
+            expect(textO.eventOnChange.countOfSubscribers).toBe(initialSubscriberCount)
+            textO.set('after unmount')
+            await vi.runAllTimersAsync()
+            expect(root.textContent).toBe('third')
+        } finally {
+            vi.useRealTimers()
+        }
+    })
+    it.each([false, true])('follows default component root replacements (animations: %s)', async animations => {
+        vi.useFakeTimers()
+        try {
+            const [{ h }, { DomeComponent }, { ObservableVariable }] = await Promise.all([
+                import('./Dome.mjs'), import('./DomeComponent.mjs'), import('@lexriver/observable')
+            ])
+            const value = new ObservableVariable('initial')
+            const initialCount = value.eventOnChange.countOfSubscribers
+            class ReplacingComponent extends DomeComponent<{value:typeof value}> {
+                render():HTMLElement {
+                    const element = new FakeElement()
+                    element.textContent = this.attrs.value.get()
+                    return element as unknown as HTMLElement
+                }
+            }
+            let component!:ReplacingComponent
+            const root = h(ReplacingComponent, {
+                value,
+                ref: instance => { component = instance },
+                onHideAnimation: animations ? {cssClassName: 'hide', timeMs: 20} : undefined,
+                onShowAnimation: animations ? {cssClassName: 'show', timeMs: 20} : undefined
+            }) as unknown as FakeElement
+            body.appendChild(root)
+            await vi.runAllTimersAsync()
+            for(const text of ['first', 'second', 'third']){
+                const previousRoot = component.rootElement
+                value.set(text)
+                await vi.advanceTimersByTimeAsync(animations ? 25 : 5)
+                mutationObservers.forEach(observer => observer.trigger())
+                expect(component.rootElement).not.toBe(previousRoot)
+                expect(component.rootElement.textContent).toBe(text)
+                expect(value.eventOnChange.countOfSubscribers).toBe(initialCount + 1)
+                await vi.runAllTimersAsync()
+            }
+            component.rootElement.remove()
+            mutationObservers.forEach(observer => observer.trigger())
+            expect(value.eventOnChange.countOfSubscribers).toBe(initialCount)
+            value.set('unmounted')
+            await vi.runAllTimersAsync()
+            expect(component.rootElement.textContent).toBe('third')
+        } finally {
+            vi.useRealTimers()
+        }
+    })
+
     it('unsubscribes component observables after the root is detached', async () => {
         const [{ h }, { DomeComponent }, { ObservableVariable }] = await Promise.all([
             import('./Dome.mjs'),

@@ -44,8 +44,10 @@ export abstract class DomeComponent<Attrs>{
         const newEl = this.render()
         //console.log('DomeComponent: update() newEl=', newEl) //TODO: remove this
         //DomeManipulator.unhideElement(this.el) // if was null before
-        await DomeManipulator.replaceAsync(this.rootElement, newEl, this.attrs.onHideAnimation, this.attrs.onShowAnimation)
-        this.rootElement = newEl
+        await DomeManipulator.replaceAsync(this.rootElement, newEl, this.attrs.onHideAnimation, this.attrs.onShowAnimation, element => {
+            // Lifetime observers must see the new root before the show animation yields.
+            this.rootElement = element
+        })
         //console.timeEnd('browser')
         this.afterUpdate()
         

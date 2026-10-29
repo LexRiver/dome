@@ -72,7 +72,7 @@ export namespace DomeManipulator {
     }
 
 
-    export async function replaceAsync(oldElement: Element, newElement: Element, animationHide?:Animation, animationShow?:Animation) {
+    export async function replaceAsync(oldElement: Element, newElement: Element, animationHide?:Animation, animationShow?:Animation, onReplaced?:(element:Element) => void) {
         if(!oldElement.parentNode){
             // almost impossible if in DOM
             console.error('replaceAsync() failed, no parentNode.', 'oldElement=', oldElement)
@@ -92,6 +92,7 @@ export namespace DomeManipulator {
             throw new Error('no parent for replaceAsync()')
         }
         parent.replaceChild(newElement, oldElement)
+        onReplaced?.(newElement)
 
         // show
         if(animationShow){

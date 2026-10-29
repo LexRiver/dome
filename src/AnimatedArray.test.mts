@@ -10,7 +10,13 @@ class FakeElement {
         add: (name:string) => this.classList.values.add(name),
         remove: (name:string) => this.classList.values.delete(name)
     }
+    hidden = false
+    readonly style = { display: '' }
     parentNode:FakeElement|null = null
+
+    get lastChild(){
+        return this.childNodes[this.childNodes.length - 1] ?? null
+    }
 
     get children(){
         return this.childNodes
@@ -107,8 +113,85 @@ describe('AnimatedArray.update', () => {
         const latestUpdate = animatedArray.update(['latest'], asElement(parent))
         await Promise.all([emptyUpdate, latestUpdate])
 
-        expect(parent.childNodes).toEqual([latest])
+        expect(parent.childNodes).toEqual([latest, empty])
+        expect(empty.hidden).toBe(true)
         expect(animatedArray.size).toBe(1)
+    })
+
+    it('creates each row only when it can be inserted, including mixed patches', async () => {
+        const parent = new FakeElement()
+        const created:FakeElement[] = []
+        const cleanupChecks:Promise<boolean>[] = []
+        const animatedArray = new AnimatedArray<string>({
+            getKey: item => item,
+            getHtmlElement: () => {
+                // Previous rows must already be mounted before another row is created.
+                for(const element of created){
+                    expect(element.parentNode).toBe(parent)
+                }
+                const element = new FakeElement()
+                created.push(element)
+                cleanupChecks.push(new Promise<boolean>(resolve => {
+                    setTimeout(() => resolve(element.parentNode === parent), 0)
+                }))
+                return asElement(element)
+            },
+            animationShow: animation('show', 10),
+            animationHide: animation('hide', 10)
+        })
+
+        await animatedArray.update(['a', 'b', 'c'], asElement(parent))
+        expect(await Promise.all(cleanupChecks)).toEqual([true, true, true])
+        const retained = created[1]
+        created.length = 0
+        cleanupChecks.length = 0
+
+        await animatedArray.update(['x', 'b', 'y'], asElement(parent))
+        expect(await Promise.all(cleanupChecks)).toEqual([true, true])
+        expect(parent.childNodes).toEqual([created[0], retained, created[1]])
+        expect(animatedArray.arrayOfKeyToElement.map(pair => pair.key)).toEqual(['x', 'b', 'y'])
+        expect(animatedArray.arrayOfKeyToElement.map(pair => pair.element)).toEqual(parent.childNodes)
+    })
+
+    it('keeps the reusable empty view mounted through repeated transitions', async () => {
+        const parent = new FakeElement()
+        const empty = new FakeElement()
+        const animatedArray = new AnimatedArray<string>({
+            getKey: item => item,
+            getHtmlElement: () => asElement(new FakeElement()),
+            emptyList: asElement(empty),
+            animationShow: animation('show'),
+            animationHide: animation('hide')
+        })
+        await animatedArray.update([], asElement(parent))
+        let detachments = 0
+        const remove = empty.remove.bind(empty)
+        empty.remove = () => {
+            detachments++
+            remove()
+        }
+
+        for(let cycle = 0; cycle < 3; cycle++){
+            await animatedArray.update(['a', 'b'], asElement(parent))
+            expect(empty.parentNode).toBe(parent)
+            expect(empty.hidden).toBe(true)
+            expect(empty.style.display).toBe('none')
+            expect(parent.childNodes).toEqual([
+                ...animatedArray.arrayOfKeyToElement.map(pair => pair.element), empty
+            ])
+            await animatedArray.update(['b', 'c'], asElement(parent))
+            expect(parent.childNodes).toEqual([
+                ...animatedArray.arrayOfKeyToElement.map(pair => pair.element), empty
+            ])
+            const rows = parent.childNodes.slice(0, -1)
+            await animatedArray.update([], asElement(parent))
+            expect(parent.childNodes).toEqual([empty])
+            expect(rows.every(row => row.parentNode === null)).toBe(true)
+            expect(animatedArray.size).toBe(0)
+            expect(empty.hidden).toBe(false)
+            expect(empty.style.display).toBe('')
+        }
+        expect(detachments).toBe(0)
     })
 
     it('resolves only after its animated DOM operations finish', async () => {
