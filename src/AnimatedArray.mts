@@ -54,11 +54,11 @@ export class AnimatedArray<T>{
                 parentElement.appendChild(emptyList)
             }
             if(array.length == 0){
-                for(const child of Array.from(parentElement.childNodes)){
-                    if(child !== emptyList){
-                        await DomeManipulator.removeElementAsync(child as Element, this.params.animationHide)
-                    }
-                }
+                await Promise.all(
+                    Array.from(parentElement.childNodes)
+                        .filter(child => child !== emptyList)
+                        .map(child => DomeManipulator.removeElementAsync(child as Element, this.params.animationHide))
+                )
                 this.arrayOfKeyToElement = []
                 await DomeManipulator.unhideElementAsync(emptyList, this.params.animationShow)
                 return
@@ -78,10 +78,12 @@ export class AnimatedArray<T>{
                 const item = array[itemIndex]
                 operations.push(() => {
                     const element = this.params.getHtmlElement(item)
+                    // Logical row references ignore outgoing rows still animating in the DOM.
+                    const nextElement = this.arrayOfKeyToElement[index]?.element ?? emptyList ?? null
                     this.arrayOfKeyToElement.splice(index, 0, {key, element})
-                    return DomeManipulator.insertByIndexAsync(
+                    return DomeManipulator.insertBeforeAsync(
                         element,
-                        index,
+                        nextElement,
                         parentElement,
                         this.params.animationShow
                     )
@@ -95,8 +97,11 @@ export class AnimatedArray<T>{
             }
         })
 
-        for(const operation of operations){
-            await operation()
+        // Start operations in patch order without waiting between row animations.
+        // Settle the entire batch even on failure before the next queued update starts.
+        const results = await Promise.allSettled(operations.map(async operation => operation()))
+        for(const result of results){
+            if(result.status === 'rejected') throw result.reason
         }
     }
 

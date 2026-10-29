@@ -20,6 +20,16 @@ class FakeNode {
         return child
     }
 
+    insertBefore(child:FakeNode, reference:FakeNode|null){
+        if(!reference) return this.appendChild(child)
+        child.remove()
+        const index = this.childNodes.indexOf(reference)
+        if(index < 0) throw new Error('reference is not a child')
+        child.parentNode = this
+        this.childNodes.splice(index, 0, child)
+        return child
+    }
+
     textContent = ''
 
     append(text:string){
@@ -130,6 +140,46 @@ afterAll(() => {
 })
 
 describe('Dome component lifecycle', () => {
+    it('preserves subscriptions in batched animated rows and cleans up removed rows', async () => {
+        vi.useFakeTimers()
+        try {
+            const [{ h }, { AnimatedArray }, { ObservableVariable }] = await Promise.all([
+                import('./Dome.mjs'), import('./AnimatedArray.mjs'), import('@lexriver/observable')
+            ])
+            const visibleO = new ObservableVariable(true)
+            const parent = new FakeElement()
+            body.appendChild(parent)
+            const array = new AnimatedArray<string>({
+                getKey: item => item,
+                getHtmlElement: () => h('tr', {visibleIf: visibleO}) as HTMLElement,
+                animationShow: {cssClassName: 'show', timeMs: 20},
+                animationHide: {cssClassName: 'hide', timeMs: 30}
+            })
+            const insertion = array.update(['a', 'b', 'c'], parent as unknown as HTMLElement)
+            await vi.advanceTimersByTimeAsync(0)
+            expect(parent.childNodes).toHaveLength(3)
+            expect(visibleO.eventOnChange.countOfSubscribers).toBe(3)
+            expect(parent.childNodes.every(row => (row as FakeElement).classList.values.has('show'))).toBe(true)
+            await vi.runAllTimersAsync()
+            await insertion
+            visibleO.set(false)
+            await vi.runAllTimersAsync()
+            expect(parent.childNodes.every(row => (row as FakeElement).hidden)).toBe(true)
+            visibleO.set(true)
+            await vi.runAllTimersAsync()
+            const replacement = array.update(['x', 'b', 'y'], parent as unknown as HTMLElement)
+            await vi.runAllTimersAsync()
+            await replacement
+            mutationObservers.forEach(observer => observer.trigger())
+            expect(parent.childNodes).toHaveLength(3)
+            expect(visibleO.eventOnChange.countOfSubscribers).toBe(3)
+            parent.remove()
+            mutationObservers.forEach(observer => observer.trigger())
+            expect(visibleO.eventOnChange.countOfSubscribers).toBe(0)
+        } finally {
+            vi.useRealTimers()
+        }
+    })
     it('renders AnimatedContent strings and empty values without animations', async () => {
         vi.useFakeTimers()
         try {

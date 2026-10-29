@@ -1751,6 +1751,12 @@ export class AnimatedListTest extends DomeComponent<Attrs>{
 
 # AnimatedTable
 
+Row additions and removals animate concurrently within each `AnimatedArray` update
+(including the array used by `AnimatedTable`). Updates remain queued: the next row
+update starts only after all animations in the current batch finish. New rows are
+created immediately before insertion so their observable subscriptions stay active.
+
+
 Component `AnimatedTable` can be used to display html table where items could be dynamically changed.
 
 ```tsx
