@@ -5,7 +5,15 @@ class FakeNode {
     parentNode:FakeNode|null = null
     readonly childNodes:FakeNode[] = []
 
+    get firstChild(){
+        return this.childNodes[0] ?? null
+    }
+
     appendChild(child:FakeNode){
+        if(child instanceof FakeDocumentFragment){
+            for(const node of [...child.childNodes]) this.appendChild(node)
+            return child
+        }
         child.remove()
         child.parentNode = this
         this.childNodes.push(child)
@@ -122,6 +130,87 @@ afterAll(() => {
 })
 
 describe('Dome component lifecycle', () => {
+    it('renders AnimatedContent strings and empty values without animations', async () => {
+        vi.useFakeTimers()
+        try {
+            const [{ h }, { AnimatedContent }, { ObservableVariable }] = await Promise.all([
+                import('./Dome.mjs'), import('./AnimatedContent.mjs'), import('@lexriver/observable')
+            ])
+            const valueO = new ObservableVariable<string | null | undefined>('initial')
+            const root = h(AnimatedContent, {
+                valueO,
+                renderContent: value => value
+            }) as unknown as FakeElement
+            body.appendChild(root)
+            await vi.runAllTimersAsync()
+            expect(root.firstChild?.textContent).toBe('initial')
+            for(const value of ['<b>literal text</b>', null, undefined, 'latest']){
+                valueO.set(value)
+                await vi.runAllTimersAsync()
+                expect(root.childNodes).toHaveLength(1)
+                expect(root.firstChild?.textContent).toBe(value ?? '')
+                expect(root.firstChild?.childNodes).toHaveLength(0)
+            }
+            root.remove()
+            mutationObservers.forEach(observer => observer.trigger())
+            expect(valueO.eventOnChange.countOfSubscribers).toBe(0)
+        } finally {
+            vi.useRealTimers()
+        }
+    })
+    it('mounts fresh AnimatedContent fragments after hiding and cleans up their subscriptions', async () => {
+        vi.useFakeTimers()
+        try {
+            const [{ h }, { AnimatedContent }, { ObservableVariable }] = await Promise.all([
+                import('./Dome.mjs'), import('./AnimatedContent.mjs'), import('@lexriver/observable')
+            ])
+            const valueO = new ObservableVariable('initial')
+            const visibleO = new ObservableVariable(true)
+            const rendered:string[] = []
+            const children:FakeElement[] = []
+            const root = h(AnimatedContent, {
+                valueO,
+                renderContent: (value:string) => {
+                    rendered.push(value)
+                    const child = h('button', {visibleIf: visibleO}) as unknown as FakeElement
+                    children.push(child)
+                    const fragment = document.createDocumentFragment()
+                    fragment.appendChild(child as unknown as Node)
+                    return fragment
+                },
+                onHideAnimation: {cssClassName: 'hide', timeMs: 20},
+                onShowAnimation: {cssClassName: 'show', timeMs: 20}
+            }) as unknown as FakeElement
+            body.appendChild(root)
+            await vi.runAllTimersAsync()
+            for(const value of ['first', 'second', 'third']){
+                valueO.set(value)
+                await vi.advanceTimersByTimeAsync(5)
+                expect(rendered).not.toContain(value)
+                await vi.advanceTimersByTimeAsync(20)
+                expect(rendered[rendered.length - 1]).toBe(value)
+                const wrapper = root.firstChild as FakeElement
+                expect(wrapper.classList.values.has('show')).toBe(true)
+                expect(wrapper.firstChild).toBe(children[children.length - 1])
+                mutationObservers.forEach(observer => observer.trigger())
+                await vi.runAllTimersAsync()
+                expect(valueO.eventOnChange.countOfSubscribers).toBe(1)
+                expect(visibleO.eventOnChange.countOfSubscribers).toBe(1)
+                visibleO.set(false)
+                await vi.runAllTimersAsync()
+                expect(children[children.length - 1].hidden).toBe(true)
+                visibleO.set(true)
+                await vi.runAllTimersAsync()
+                expect(children[children.length - 1].hidden).toBe(false)
+            }
+            root.remove()
+            mutationObservers.forEach(observer => observer.trigger())
+            expect(valueO.eventOnChange.countOfSubscribers).toBe(0)
+            expect(visibleO.eventOnChange.countOfSubscribers).toBe(0)
+        } finally {
+            vi.useRealTimers()
+        }
+    })
     it.each([false, true])('keeps AnimatedText subscribed across repeated updates (animations: %s)', async animations => {
         vi.useFakeTimers()
         try {

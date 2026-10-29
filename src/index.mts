@@ -16,6 +16,7 @@ export {
 export * from '@lexriver/type-event'
 export { TypeEvent } from '@lexriver/type-event'
 export * from './AnimatedArray.mjs'
+export * from './AnimatedContent.mjs'
 export * from './AnimatedTable.mjs'
 export * from './AnimatedText.mjs'
 export * from './Dome.mjs'

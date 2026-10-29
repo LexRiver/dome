@@ -12,6 +12,8 @@ const cssClassGenerationByElement = new WeakMap<Element, Map<string, number>>()
 
 export namespace DomeManipulator {
 
+    export type ChildrenToInsert = Element | Element[] | DocumentFragment | Text | string | null | undefined
+
     export async function hideElementAsync(element: Element, animation?:Animation) {
         if(!element) throw new Error('hideElementAsync failed, no element')
         const generation = (visibilityGenerationByElement.get(element) ?? 0) + 1
@@ -156,7 +158,7 @@ export namespace DomeManipulator {
         }
     }
 
-    export async function appendChildrenAsync(containerElement:Element, children:Element | Element[] | DocumentFragment | Text | string | null | undefined, animation?:Animation){
+    export async function appendChildrenAsync(containerElement:Element, children:ChildrenToInsert, animation?:Animation){
         //console.log('DomeManipulator: appendChildrenAsync', 'containerELement=', containerElement, 'children=', children, 'animation=', animation)
         if (DataTypes.isString(children)) {
             // no animation for text?
@@ -178,10 +180,11 @@ export namespace DomeManipulator {
     /**
      * Replacements for the same container run in call order. A rejected replacement does
      * not block the queue, and replacements for different containers remain independent.
+     * Content factories run synchronously after removal, immediately before insertion.
      */
     export async function replaceAllChildrenAsync(
         containerElement: Element,
-        childrenToInsert: Element | Element[] | DocumentFragment | Text | string | null | undefined,
+        childrenToInsert: ChildrenToInsert | (() => ChildrenToInsert),
         animationForHide?:Animation,
         animationForShow?:Animation
     ) {
@@ -192,7 +195,8 @@ export namespace DomeManipulator {
                 if(containerElement.childNodes.length>0){
                     await removeAllChildrenAsync(containerElement, animationForHide)
                 }
-                await appendChildrenAsync(containerElement, childrenToInsert, animationForShow)
+                const children = typeof childrenToInsert === 'function' ? childrenToInsert() : childrenToInsert
+                await appendChildrenAsync(containerElement, children, animationForShow)
             })
 
         replacementPromiseByElement.set(containerElement, replacement)

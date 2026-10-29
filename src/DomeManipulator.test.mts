@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DomeManipulator } from './DomeManipulator.mjs'
 
 class FakeElement {
@@ -117,6 +117,112 @@ describe('DomeManipulator.removeAllChildrenAsync', () => {
 
         expect(parent.childNodes).toEqual([addedDuringAnimation])
         expect(original.parentNode).toBe(null)
+    })
+})
+
+describe('DomeManipulator.replaceAllChildrenAsync', () => {
+    beforeEach(() => {
+        vi.useFakeTimers()
+    })
+
+    afterEach(() => {
+        vi.useRealTimers()
+    })
+
+    it('still accepts children directly', async () => {
+        const parent = new FakeElement()
+        const original = new FakeElement()
+        const replacement = new FakeElement()
+        parent.appendChild(original)
+        const children:DomeManipulator.ChildrenToInsert = [asElement(replacement)]
+
+        await DomeManipulator.replaceAllChildrenAsync(asElement(parent), children)
+
+        expect(parent.childNodes).toEqual([replacement])
+        expect(original.parentNode).toBe(null)
+    })
+
+    it('calls the factory only after the hide animation and removal', async () => {
+        const parent = new FakeElement()
+        const original = new FakeElement()
+        parent.appendChild(original)
+        const factory = vi.fn(() => {
+            expect(parent.childNodes).toEqual([])
+            expect(original.parentNode).toBe(null)
+            const replacement = new FakeElement()
+            queueMicrotask(() => {
+                expect(parent.childNodes).toEqual([replacement])
+            })
+            return asElement(replacement)
+        })
+
+        const replacement = DomeManipulator.replaceAllChildrenAsync(
+            asElement(parent), factory, { cssClassName: 'hide', timeMs: 10 }
+        )
+        expect(factory).not.toHaveBeenCalled()
+        await vi.advanceTimersByTimeAsync(0)
+        expect(original.classList.values.has('hide')).toBe(true)
+        await vi.advanceTimersByTimeAsync(9)
+        expect(factory).not.toHaveBeenCalled()
+        expect(parent.childNodes).toEqual([original])
+
+        await vi.advanceTimersByTimeAsync(1)
+        await replacement
+        expect(factory).toHaveBeenCalledTimes(1)
+        expect(parent.childNodes).toEqual([factory.mock.results[0].value])
+    })
+
+    it('defers queued content creation until its turn and hide animation finish', async () => {
+        const parent = new FakeElement()
+        const original = new FakeElement()
+        parent.appendChild(original)
+        const firstFactory = vi.fn(() => asElement(new FakeElement()))
+        const secondFactory = vi.fn(() => {
+            expect(parent.childNodes).toEqual([])
+            return asElement(new FakeElement())
+        })
+        const first = DomeManipulator.replaceAllChildrenAsync(
+            asElement(parent), firstFactory,
+            { cssClassName: 'hide', timeMs: 10 },
+            { cssClassName: 'show', timeMs: 20 }
+        )
+        const second = DomeManipulator.replaceAllChildrenAsync(
+            asElement(parent), secondFactory, { cssClassName: 'hide', timeMs: 10 }
+        )
+        expect(firstFactory).not.toHaveBeenCalled()
+        expect(secondFactory).not.toHaveBeenCalled()
+
+        await vi.advanceTimersByTimeAsync(10)
+        expect(firstFactory).toHaveBeenCalledTimes(1)
+        expect(secondFactory).not.toHaveBeenCalled()
+        expect(parent.childNodes).toEqual([firstFactory.mock.results[0].value])
+
+        await vi.advanceTimersByTimeAsync(20)
+        await first
+        expect(secondFactory).not.toHaveBeenCalled()
+        expect(parent.firstChild?.classList.values.has('hide')).toBe(true)
+
+        await vi.advanceTimersByTimeAsync(10)
+        await second
+        expect(secondFactory).toHaveBeenCalledTimes(1)
+        expect(parent.childNodes).toEqual([secondFactory.mock.results[0].value])
+    })
+
+    it('rejects a throwing factory without blocking the next queued replacement', async () => {
+        const parent = new FakeElement()
+        const error = new Error('content creation failed')
+        const failingFactory = vi.fn(() => { throw error })
+        const nextFactory = vi.fn(() => asElement(new FakeElement()))
+
+        const failed = DomeManipulator.replaceAllChildrenAsync(asElement(parent), failingFactory)
+        const rejection = expect(failed).rejects.toBe(error)
+        const next = DomeManipulator.replaceAllChildrenAsync(asElement(parent), nextFactory)
+
+        await rejection
+        await next
+        expect(failingFactory).toHaveBeenCalledTimes(1)
+        expect(nextFactory).toHaveBeenCalledTimes(1)
+        expect(parent.childNodes).toEqual([nextFactory.mock.results[0].value])
     })
 })
 

@@ -32,6 +32,52 @@ import {Async} from '@lexriver/dome'
 
 ```
 
+## Animated content
+
+Use `AnimatedText` for observable strings. Use `AnimatedContent` for fresh DOM/JSX content:
+
+```tsx
+import { React, AnimatedContent, ObservableValue } from '@lexriver/dome'
+
+const messageO = new ObservableValue('Hello')
+
+const element = <AnimatedContent
+    valueO={messageO}
+    renderContent={message => <>
+        <strong>{message}</strong>
+        <button onClick={() => console.log(message)}>Open</button>
+    </>}
+    onHideAnimation={{ cssClassName: 'fade-out', timeMs: 150 }}
+    onShowAnimation={{ cssClassName: 'fade-in', timeMs: 150 }}
+/>
+document.body.appendChild(element)
+```
+
+`AnimatedContent` keeps a stable root (`span` by default; configurable with `tag`
+and `class`). A fresh inner `span` wraps each rendered value so strings, nodes,
+and fragments can animate. `renderContent` may also return `null` or `undefined`
+for empty content. Return fresh nodes/fragments each time: fragments are consumed
+when inserted, and cloning interactive DOM does not preserve event handlers or
+observable subscriptions. Choose markup appropriate for the inner span wrapper.
+
+For manual replacements, `replaceAllChildrenAsync` accepts either existing content
+or a **synchronous content factory**:
+
+```tsx
+await DomeManipulator.replaceAllChildrenAsync(
+    container,
+    () => <button onClick={handleClick}>Open</button>,
+    { cssClassName: 'fade-out', timeMs: 150 },
+    { cssClassName: 'fade-in', timeMs: 150 }
+)
+```
+
+Prefer the factory for reactive DOM: it runs in queue order, after the old children
+finish hiding and are removed, immediately before insertion. This prevents new
+subscriptions from being cleaned up while waiting to mount. Existing direct-value
+calls remain supported. Factories must not return promises; fetch data beforehand.
+`AnimatedContent` reads the current observable value when its factory runs.
+
 ## Creating component
 
 ```tsx
@@ -1122,15 +1168,47 @@ Append one or few children to container element.
 ## replaceAllChildrenAsync
 
 ```typescript
-    replaceAllChildrenAsync(
-        containerElement: Element, 
-        childrenToInsert: Element | Element[] | DocumentFragment | Text | string | null | undefined, 
-        animationForHide?:Animation, 
-        animationForShow?:Animation
-    )
-``` 
+    type ChildrenToInsert = Element | Element[] | DocumentFragment | Text | string | null | undefined
 
-Replace all children for container element.
+    replaceAllChildrenAsync(
+        containerElement: Element,
+        childrenToInsert: ChildrenToInsert | (() => ChildrenToInsert),
+        animationForHide?:Animation,
+        animationForShow?:Animation
+    ): Promise<void>
+```
+
+Replaces all children of the container, optionally animating removal and insertion.
+The content type is exported as `DomeManipulator.ChildrenToInsert`.
+
+Pass existing content directly, or provide a **synchronous factory** that creates it.
+Prefer a factory for reactive DOM/JSX: it runs after the old children finish hiding
+and are removed, immediately before the new content is inserted. This avoids
+creating observable subscriptions while content is still waiting to mount.
+
+```tsx
+await DomeManipulator.replaceAllChildrenAsync(
+    container,
+    () => <MyComponent valueO={valueO} />,
+    { cssClassName: 'fade-out', timeMs: 150 },
+    { cssClassName: 'fade-in', timeMs: 150 }
+)
+```
+
+Return fresh nodes/fragments from the factory. Inserting a fragment consumes its
+children; cloning interactive DOM does not preserve event handlers or observable
+subscriptions. Factories must not return promises; load asynchronous data before
+calling this method.
+
+Replacements for the same container run in call order, including factory execution.
+Different containers update independently. The returned promise resolves after the
+replacement and show animation finish. A failed replacement rejects its promise
+but does not block later queued replacements.
+
+Existing direct-content calls remain supported. Passing `null` or `undefined`
+removes the old children without inserting new content. Animation classes apply
+to element children; wrap plain text or fragment contents in an element if they
+need to animate together.
 
 <br/>
 
